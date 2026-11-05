@@ -1,0 +1,2969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduPredict Studio – Student Performance Prediction Using Artificial Neural Networks</title>
+  <!-- Google Fonts Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <!-- TensorFlow.js for Genuine Artificial Neural Network Training & Backpropagation -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js"></script>
+  <!-- Chart.js for Interactive Analytics & Diagnostics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- PapaParse for Robust CSV Parsing & Export -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar and studio utilities */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+    }
+    .boundary-canvas {
+      image-rendering: auto;
+    }
+    .math-box {
+      background: #f8fafc;
+      border-left: 3px solid #4f46e5;
+      padding: 0.65rem 0.9rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: #1e293b;
+      border-radius: 0 0.5rem 0.5rem 0;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full"></div>
+
+  <!-- Top Navigation Header (Matches ML Studio Aesthetic) -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 flex items-center justify-center text-white shadow-md shadow-indigo-100 shrink-0">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight">EduPredict Studio</h1>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">MBA DS & AI</span>
+            <span id="tfBackendBadge" class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">TF.js ANN</span>
+          </div>
+          <p class="text-xs text-slate-500 hidden sm:block">Student Performance Prediction Dashboard Using Artificial Neural Networks</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button id="btnQuickGuide" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span>Project & Viva Guide</span>
+        </button>
+        <button id="btnExportReport" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors">
+          <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          <span>Export Center & Report</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Studio Workspace -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full flex flex-col gap-6">
+
+    <!-- 4-Step Studio Stepper Navigation -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <a href="#sectionStep1" class="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 shadow-sm border-l-4 border-l-indigo-600 hover:bg-slate-50 transition">
+        <div class="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0">1</div>
+        <div class="min-w-0">
+          <p class="text-xs font-semibold text-slate-800">Dataset Studio</p>
+          <p class="text-[11px] text-slate-500 truncate" id="step1Status">Synthetic (1,000 Students)</p>
+        </div>
+      </a>
+      <a href="#sectionStep2" class="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 shadow-sm border-l-4 border-l-violet-600 hover:bg-slate-50 transition">
+        <div class="w-7 h-7 rounded-lg bg-violet-100 text-violet-700 flex items-center justify-center font-bold text-xs shrink-0">2</div>
+        <div class="min-w-0">
+          <p class="text-xs font-semibold text-slate-800">ANN Architecture & Training</p>
+          <p class="text-[11px] text-slate-500 truncate" id="step2Status">Dense(16, ReLU) &rarr; Sigmoid(1)</p>
+        </div>
+      </a>
+      <a href="#sectionStep3" class="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 shadow-sm border-l-4 border-l-emerald-600 hover:bg-slate-50 transition">
+        <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs shrink-0">3</div>
+        <div class="min-w-0">
+          <p class="text-xs font-semibold text-slate-800">Diagnostics & 18 Plots</p>
+          <p class="text-[11px] text-slate-500 truncate" id="step3Status">Click "Train ANN Model Now"</p>
+        </div>
+      </a>
+      <a href="#sectionStep4" class="flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 shadow-sm border-l-4 border-l-amber-600 hover:bg-slate-50 transition">
+        <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs shrink-0">4</div>
+        <div class="min-w-0">
+          <p class="text-xs font-semibold text-slate-800">Student Outcome Predictor</p>
+          <p class="text-[11px] text-slate-500 truncate" id="step4Status">10-Feature Live Inference</p>
+        </div>
+      </a>
+    </div>
+
+    <!-- Dynamic Dataset & Model KPI Bar -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-700">Live Cohort & Neural Network KPI Scorecard</h2>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="overviewDatasetTag" class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-amber-50 text-amber-800 border border-amber-200">SYNTHETIC COHORT (1,000)</span>
+          <span id="overviewModelStatusTag" class="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-slate-100 text-slate-600 border border-slate-200">MODEL: UNTRAINED</span>
+        </div>
+      </div>
+
+      <!-- 8 Dataset KPIs -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
+        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+          <span class="text-[10px] text-slate-500 font-semibold block uppercase">Total Students</span>
+          <span id="kpiTotalStudents" class="text-base font-bold font-mono text-slate-900">1,000</span>
+        </div>
+        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+          <span class="text-[10px] text-slate-500 font-semibold block uppercase">Pass Students</span>
+          <span id="kpiPassCount" class="text-base font-bold font-mono text-rose-600">0</span>
+        </div>
+        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+          <span class="text-[10px] text-slate-500 font-semibold block uppercase">Fail Students</span>
+          <span id="kpiFailCount" class="text-base font-bold font-mono text-sky-600">0</span>
+        </div>
+        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+          <span class="text-[10px] text-slate-500 font-semibold block uppercase">Pass Rate (%)</span>
+          <span id="kpiPassPct" class="text-base font-bold font-mono text-emerald-600">0.0%</span>
+        </div>
+        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+          <span class="text-[10px] text-slate-500 font-semibold block uppercase">Fail Rate (%)</span>
+          <span id="kpiFailPct" class="text-base font-bold font-mono text-slate-700">0.0%</span>
+        </div>
+        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+          <span class="text-[10px] text-slate-500 font-semibold block uppercase">Avg Attendance</span>
+          <span id="kpiAvgAttendance" class="text-base font-bold font-mono text-indigo-600">0.0%</span>
+        </div>
+        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+          <span class="text-[10px] text-slate-500 font-semibold block uppercase">Avg Study Hrs</span>
+          <span id="kpiAvgStudy" class="text-base font-bold font-mono text-violet-600">0.0h</span>
+        </div>
+        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+          <span class="text-[10px] text-slate-500 font-semibold block uppercase">Avg Final Score</span>
+          <span id="kpiAvgFinalScore" class="text-base font-bold font-mono text-slate-900">0.0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- =======================================================================
+         TOP TWO-COLUMN STUDIO GRID (Matches ml_dashboard.html 5-col / 7-col Layout)
+         ======================================================================= -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- LEFT COLUMN: Step 1 Data Source & Step 2 ANN Configuration (5 cols) -->
+      <div class="lg:col-span-5 flex flex-col gap-6">
+
+        <!-- CARD 1: STEP 1 DATA SOURCE (SYNTHETIC GENERATOR & CSV UPLOAD) -->
+        <section id="sectionStep1" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+              <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Step 1: Student Data Source</h2>
+            </div>
+            <!-- Mode Toggle Tabs -->
+            <div class="inline-flex p-1 bg-slate-200/80 rounded-lg text-xs font-medium">
+              <button id="tabGenerate" type="button" class="px-3 py-1 rounded-md bg-white text-indigo-700 shadow-sm transition-all font-semibold">Generate Synthetic</button>
+              <button id="tabUpload" type="button" class="px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 transition-all font-medium">Upload CSV</button>
+            </div>
+          </div>
+
+          <div class="p-5">
+            <!-- SYNTHETIC GENERATOR PANEL -->
+            <div id="panelGenerate" class="flex flex-col gap-4">
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label for="genSizeSelect" class="block text-xs font-semibold text-slate-700 mb-1">Cohort Size (Records)</label>
+                  <select id="genSizeSelect" class="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-2 text-slate-800 focus:ring-2 focus:ring-indigo-500">
+                    <option value="100">100 Students</option>
+                    <option value="500">500 Students</option>
+                    <option value="1000" selected>1,000 Students (Default)</option>
+                    <option value="2000">2,000 Students</option>
+                    <option value="5000">5,000 Students</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="genSeedInput" class="block text-xs font-semibold text-slate-700 mb-1">Random Seed (PRNG)</label>
+                  <input id="genSeedInput" type="number" min="1" max="999999" value="2026" class="w-full text-xs font-mono font-medium bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-2 text-slate-800 focus:ring-2 focus:ring-indigo-500">
+                </div>
+              </div>
+
+              <!-- Passing Score Slider -->
+              <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <div class="flex justify-between items-center text-xs mb-1">
+                  <span class="text-slate-600 font-semibold">Passing Score Cutoff (Final_Score &ge; Cutoff &rarr; Pass=1)</span>
+                  <span id="lblPassCutoff" class="font-bold text-indigo-600 font-mono">40</span>
+                </div>
+                <input id="genPassThresholdInput" type="range" min="25" max="75" step="1" value="40" class="w-full accent-indigo-600 cursor-pointer h-1.5 bg-slate-200 rounded-lg">
+                <p class="text-[11px] text-slate-500 mt-1">Default passing score: 40. Target is derived from academic features + noise.</p>
+              </div>
+
+              <div class="flex items-center gap-2 pt-1">
+                <button id="generateDatasetBtn" type="button" class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-all active:scale-[0.98]">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                  <span>Generate Synthetic Cohort</span>
+                </button>
+                <button id="regenerateRandomSeedBtn" type="button" title="Regenerate with new random seed" class="px-3 py-2 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-colors">
+                  New Seed
+                </button>
+                <button id="downloadSyntheticCsvBtn" type="button" title="Download Synthetic Dataset as CSV" class="px-3 py-2 text-xs font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition-colors">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- UPLOAD CSV PANEL -->
+            <div id="panelUpload" class="hidden flex flex-col gap-4">
+              <div id="dropZone" class="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl p-4 text-center bg-slate-50/50 hover:bg-indigo-50/20 transition-all cursor-pointer">
+                <input type="file" id="csvFileInput" accept=".csv,text/csv" class="hidden">
+                <div class="flex flex-col items-center gap-1">
+                  <div class="w-9 h-9 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mb-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                  </div>
+                  <p class="text-xs font-semibold text-slate-800">Click to upload or drag & drop student CSV</p>
+                  <p class="text-[11px] text-slate-500">Parsed with PapaParse • Detects missing & duplicate records</p>
+                </div>
+              </div>
+
+              <div id="uploadValidationAlert" class="hidden p-2.5 rounded-lg text-xs border"></div>
+
+              <!-- Target & Class Mapping + Feature Selector -->
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2.5">
+                <div class="grid grid-cols-3 gap-2">
+                  <div>
+                    <label for="targetColumnSelect" class="block text-[10px] font-bold text-slate-600 uppercase">Target Col</label>
+                    <select id="targetColumnSelect" class="w-full mt-0.5 text-xs bg-white border border-slate-300 rounded px-1.5 py-1 font-mono text-slate-800"></select>
+                  </div>
+                  <div>
+                    <label for="positiveClassSelect" class="block text-[10px] font-bold text-emerald-700 uppercase">Pass (1)</label>
+                    <select id="positiveClassSelect" class="w-full mt-0.5 text-xs bg-white border border-slate-300 rounded px-1.5 py-1 font-mono text-slate-800"></select>
+                  </div>
+                  <div>
+                    <label for="negativeClassSelect" class="block text-[10px] font-bold text-rose-700 uppercase">Fail (0)</label>
+                    <select id="negativeClassSelect" class="w-full mt-0.5 text-xs bg-white border border-slate-300 rounded px-1.5 py-1 font-mono text-slate-800"></select>
+                  </div>
+                </div>
+
+                <div class="flex items-center justify-between text-[11px] text-slate-600 pt-1">
+                  <span>Missing: <b id="diagMissingCount" class="font-mono text-slate-900">0</b> | Duplicates: <b id="diagDuplicateCount" class="font-mono text-slate-900">0</b></span>
+                  <button id="selectRecommendedFeaturesBtn" type="button" class="text-indigo-600 hover:underline font-semibold">Reset Default Features</button>
+                </div>
+
+                <div>
+                  <span class="text-[11px] font-semibold text-slate-700 block mb-1">Input Features (Target, Student_ID & Final_Score Excluded):</span>
+                  <div id="featureCheckboxContainer" class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto p-1.5 bg-white rounded border border-slate-200 text-xs"></div>
+                </div>
+
+                <div class="flex gap-2">
+                  <button id="applySchemaConfigBtn" type="button" class="flex-1 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg">Apply Schema & Update</button>
+                  <button id="switchToSyntheticBtn" type="button" class="px-2.5 py-1.5 text-xs font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-100 rounded-lg">Use Synthetic</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Dataset Summary Stats Pill Bar -->
+            <div class="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
+              <span class="flex items-center gap-1">
+                <span class="font-medium">Rows:</span> <span id="statRows" class="font-mono font-bold text-slate-900">1,000</span>
+              </span>
+              <span class="flex items-center gap-1">
+                <span class="font-medium">Inputs:</span> <span id="statCols" class="font-mono font-bold text-indigo-700">10 (7 Num / 3 Cat)</span>
+              </span>
+              <span class="flex items-center gap-1">
+                <span class="font-medium">Classes:</span> <span id="statClasses" class="font-mono font-bold text-slate-900">Pass: -- | Fail: --</span>
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <!-- CARD 2: STEP 2 ARTIFICIAL NEURAL NETWORK CONFIGURATION & TRAINING -->
+        <section id="sectionStep2" class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-violet-600"></span>
+              <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Step 2: TensorFlow.js ANN Config</h2>
+            </div>
+            <span id="trainingIndicator" class="hidden items-center gap-1.5 text-xs font-semibold text-indigo-600">
+              <svg class="animate-spin h-3.5 w-3.5 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              <span>Training ANN...</span>
+            </span>
+          </div>
+
+          <div class="p-5 flex flex-col gap-3.5">
+            <!-- Architecture & Hyperparameter Sliders/Selects -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                <div class="flex justify-between items-center text-xs mb-1">
+                  <span class="text-slate-600 font-medium">Hidden Layer 1 (ReLU)</span>
+                  <span id="lblHidden1" class="font-bold text-violet-600 font-mono">16 units</span>
+                </div>
+                <input id="cfgHidden1Input" type="range" min="4" max="64" step="4" value="16" class="w-full accent-violet-600 cursor-pointer h-1.5 bg-slate-200 rounded-lg">
+              </div>
+
+              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                <label for="cfgUseHidden2Select" class="block text-xs text-slate-600 font-medium mb-1">Hidden Layer 2 (Optional)</label>
+                <select id="cfgUseHidden2Select" class="w-full text-xs font-mono font-semibold bg-white border border-slate-300 rounded px-2 py-1 text-violet-700">
+                  <option value="none" selected>Disabled (1 Hidden Layer)</option>
+                  <option value="8">Enabled: 8 Neurons (ReLU)</option>
+                  <option value="12">Enabled: 12 Neurons (ReLU)</option>
+                  <option value="16">Enabled: 16 Neurons (ReLU)</option>
+                </select>
+              </div>
+
+              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                <div class="flex justify-between items-center text-xs mb-1">
+                  <span class="text-slate-600 font-medium">Training Epochs</span>
+                  <span id="lblEpochs" class="font-bold text-violet-600 font-mono">50</span>
+                </div>
+                <input id="cfgEpochsInput" type="range" min="10" max="150" step="10" value="50" class="w-full accent-violet-600 cursor-pointer h-1.5 bg-slate-200 rounded-lg">
+              </div>
+
+              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                <label for="cfgBatchSizeSelect" class="block text-xs text-slate-600 font-medium mb-1">Mini-Batch Size</label>
+                <select id="cfgBatchSizeSelect" class="w-full text-xs font-mono font-semibold bg-white border border-slate-300 rounded px-2 py-1 text-violet-700">
+                  <option value="16">16 Samples / Batch</option>
+                  <option value="32" selected>32 Samples (Default)</option>
+                  <option value="64">64 Samples / Batch</option>
+                </select>
+              </div>
+
+              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                <label for="cfgLearningRateSelect" class="block text-xs text-slate-600 font-medium mb-1">Adam Learning Rate</label>
+                <select id="cfgLearningRateSelect" class="w-full text-xs font-mono font-semibold bg-white border border-slate-300 rounded px-2 py-1 text-violet-700">
+                  <option value="0.0005">0.0005</option>
+                  <option value="0.001" selected>0.001 (Default)</option>
+                  <option value="0.005">0.005</option>
+                  <option value="0.01">0.01</option>
+                </select>
+              </div>
+
+              <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                <label for="cfgTrainSplitSelect" class="block text-xs text-slate-600 font-medium mb-1">Train / Test Split</label>
+                <select id="cfgTrainSplitSelect" class="w-full text-xs font-mono font-semibold bg-white border border-slate-300 rounded px-2 py-1 text-violet-700">
+                  <option value="0.70">70% Train / 30% Test</option>
+                  <option value="0.80" selected>80% Train / 20% Test</option>
+                  <option value="0.85">85% Train / 15% Test</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Interactive Classification Threshold Slider -->
+            <div class="bg-indigo-50/70 p-2.5 rounded-lg border border-indigo-200">
+              <div class="flex justify-between items-center text-xs mb-1">
+                <span class="text-indigo-900 font-semibold">Classification Decision Threshold (&tau;)</span>
+                <div class="flex items-center gap-2">
+                  <span id="evalThresholdValueSpan" class="font-bold text-indigo-700 font-mono">0.50</span>
+                  <button id="resetThresholdBtn" type="button" class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-100 font-semibold">Reset</button>
+                </div>
+              </div>
+              <input id="evalThresholdSlider" type="range" min="0.10" max="0.90" step="0.02" value="0.50" class="w-full accent-indigo-600 cursor-pointer h-1.5 bg-indigo-200 rounded-lg">
+              <p class="text-[10px] text-indigo-700 mt-1">Dynamically updates Confusion Matrix, Precision, Recall, F1 & 2D Boundary.</p>
+            </div>
+
+            <!-- Live Epoch Progress Bar & Telemetry -->
+            <div class="p-3 rounded-xl bg-slate-900 text-white space-y-2">
+              <div class="flex items-center justify-between text-[11px]">
+                <span id="trainingStatusText" class="text-slate-300 font-medium truncate">Ready — Train-only Z-score & One-Hot Prep</span>
+                <span id="liveEpochSpan" class="font-mono text-sky-400 font-bold shrink-0">Ep 0/50</span>
+              </div>
+              <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div id="trainingProgressBar" class="h-full bg-gradient-to-r from-violet-500 to-sky-400 transition-all duration-150" style="width: 0%"></div>
+              </div>
+              <div class="grid grid-cols-4 gap-1.5 text-[10px] font-mono pt-0.5 text-center">
+                <div class="bg-slate-800/90 py-1 px-1.5 rounded border border-slate-700">
+                  <span class="text-slate-400 block">Loss</span>
+                  <span id="liveTrainLoss" class="text-rose-400 font-bold">—</span>
+                </div>
+                <div class="bg-slate-800/90 py-1 px-1.5 rounded border border-slate-700">
+                  <span class="text-slate-400 block">Val Loss</span>
+                  <span id="liveValLoss" class="text-amber-400 font-bold">—</span>
+                </div>
+                <div class="bg-slate-800/90 py-1 px-1.5 rounded border border-slate-700">
+                  <span class="text-slate-400 block">Train Acc</span>
+                  <span id="liveTrainAcc" class="text-emerald-400 font-bold">—</span>
+                </div>
+                <div class="bg-slate-800/90 py-1 px-1.5 rounded border border-slate-700">
+                  <span class="text-slate-400 block">Val Acc</span>
+                  <span id="liveValAcc" class="text-sky-400 font-bold">—</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Train & Stop Buttons -->
+            <div class="flex gap-2">
+              <button id="trainModelBtn" type="button" class="flex-1 py-3 px-4 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-md shadow-violet-200 hover:shadow-lg transition-all active:scale-[0.99] flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span>Train ANN Model Now</span>
+              </button>
+              <button id="stopTrainingBtn" type="button" disabled class="px-3.5 py-3 rounded-xl font-semibold text-xs bg-rose-600 hover:bg-rose-700 disabled:bg-slate-200 disabled:text-slate-400 text-white transition">
+                Stop
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- RIGHT COLUMN: Step 3 2D Decision Boundary Canvas & Evaluation Analytics (7 cols) -->
+      <div id="sectionStep3" class="lg:col-span-7 flex flex-col gap-6">
+
+        <!-- PRIMARY VISUALIZATION: 2D Feature Space & ANN Decision Boundary Contour -->
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+          <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 bg-slate-50/70">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+              <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Step 3: 2D ANN Decision Surface & Held-Out Metrics</h2>
+            </div>
+            <!-- Axis Selection for 2D Slice -->
+            <div class="flex items-center gap-1.5 text-xs">
+              <label for="selAxisX" class="text-slate-500 font-medium">Axes:</label>
+              <select id="selAxisX" class="bg-white border border-slate-300 rounded px-2 py-0.5 text-xs font-mono text-slate-800"></select>
+              <span class="text-slate-400">vs</span>
+              <select id="selAxisY" class="bg-white border border-slate-300 rounded px-2 py-0.5 text-xs font-mono text-slate-800"></select>
+            </div>
+          </div>
+
+          <div class="p-5 flex flex-col gap-4">
+            <!-- Dark 2D Decision Boundary Canvas Container (Matches ml_dashboard.html) -->
+            <div class="relative w-full aspect-[4/3] max-h-[370px] bg-slate-900 rounded-xl overflow-hidden shadow-inner flex items-center justify-center border border-slate-800">
+              <canvas id="boundaryCanvas" width="600" height="440" class="w-full h-full object-contain boundary-canvas"></canvas>
+
+              <!-- Hover Coordinate & ANN Probability Tooltip -->
+              <div id="canvasTooltip" class="absolute hidden bg-slate-950/90 text-white text-[11px] p-2 rounded-lg pointer-events-none border border-slate-700 shadow-lg font-mono"></div>
+
+              <!-- Canvas Overlay Legend -->
+              <div class="absolute bottom-2.5 left-2.5 flex flex-wrap items-center gap-3 bg-slate-950/85 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-slate-800 text-[11px] text-white">
+                <span class="flex items-center gap-1.5">
+                  <span class="w-3 h-3 rounded-full bg-sky-500 inline-block border border-white/50"></span>
+                  <span id="lblLegendClass0">Fail (0)</span>
+                </span>
+                <span class="flex items-center gap-1.5">
+                  <span class="w-3 h-3 rounded-full bg-rose-500 inline-block border border-white/50"></span>
+                  <span id="lblLegendClass1">Pass (1)</span>
+                </span>
+                <span class="flex items-center gap-1.5 text-slate-300">
+                  <span class="w-3 h-0.5 bg-amber-400 inline-block"></span>
+                  <span id="lblBoundaryThresh">Boundary (P=0.50)</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Held-Out Test Metrics Scorecard (Locked until trained; never shows fake metrics) -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span class="text-[10px] text-slate-500 font-semibold block uppercase">Test Accuracy</span>
+                <span id="metricAccuracy" class="text-lg font-bold font-mono text-emerald-600">--%</span>
+                <span id="metricAccuracySub" class="text-[10px] text-slate-400 block mt-0.5 font-mono">Train: --% | Val: --%</span>
+              </div>
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span class="text-[10px] text-slate-500 font-semibold block uppercase">Test Precision</span>
+                <span id="metricPrecision" class="text-lg font-bold font-mono text-indigo-600">--</span>
+                <span class="text-[10px] text-slate-400 block mt-0.5">TP / (TP + FP)</span>
+              </div>
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span class="text-[10px] text-slate-500 font-semibold block uppercase">Test Recall</span>
+                <span id="metricRecall" class="text-lg font-bold font-mono text-indigo-600">--</span>
+                <span class="text-[10px] text-slate-400 block mt-0.5">TP / (TP + FN)</span>
+              </div>
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                <span class="text-[10px] text-slate-500 font-semibold block uppercase">Test F1-Score</span>
+                <span id="metricF1" class="text-lg font-bold font-mono text-violet-600">--</span>
+                <span class="text-[10px] text-slate-400 block mt-0.5">Harmonic Mean</span>
+              </div>
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 col-span-2 sm:col-span-1">
+                <span class="text-[10px] text-slate-500 font-semibold block uppercase">Test ROC-AUC</span>
+                <span id="metricAuc" class="text-lg font-bold font-mono text-rose-600">--</span>
+                <span id="metricSplitSub" class="text-[10px] text-slate-400 block mt-0.5 font-mono">Test n=--</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECONDARY VISUALIZATIONS: Tabbed Neural Network Diagnostics (8 Charts + Sensitivity) -->
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          <div class="px-5 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 bg-slate-50/70">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+              <h2 class="text-xs font-bold text-slate-900 uppercase tracking-wider">Neural Network Evaluation Diagnostics</h2>
+            </div>
+            <!-- Diagnostic Sub-tabs -->
+            <div class="flex flex-wrap gap-1">
+              <button id="tabDiagLoss" type="button" class="diag-tab-btn px-2.5 py-1 text-xs font-semibold rounded bg-white text-indigo-700 shadow-sm border border-slate-200">Loss & Acc Curves (4)</button>
+              <button id="tabDiagConfusion" type="button" class="diag-tab-btn px-2.5 py-1 text-xs font-medium rounded text-slate-600 hover:text-slate-900">Confusion Matrix</button>
+              <button id="tabDiagROC" type="button" class="diag-tab-btn px-2.5 py-1 text-xs font-medium rounded text-slate-600 hover:text-slate-900">ROC Curve</button>
+              <button id="tabDiagPredDist" type="button" class="diag-tab-btn px-2.5 py-1 text-xs font-medium rounded text-slate-600 hover:text-slate-900">Actual vs Pred & Probs</button>
+              <button id="tabDiagWeights" type="button" class="diag-tab-btn px-2.5 py-1 text-xs font-medium rounded text-slate-600 hover:text-slate-900">Feature Sensitivity</button>
+            </div>
+          </div>
+
+          <div class="p-5">
+            <!-- Sub-Panel 1: 4 Training & Validation Loss/Accuracy Charts -->
+            <div id="diagPanelLoss" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">1. Training Loss vs. Epoch (BCE)</h4>
+                <div class="relative h-44"><canvas id="chartTrainLoss"></canvas></div>
+              </div>
+              <div>
+                <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">2. Validation Loss vs. Epoch (BCE)</h4>
+                <div class="relative h-44"><canvas id="chartValLoss"></canvas></div>
+              </div>
+              <div>
+                <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">3. Training Accuracy vs. Epoch</h4>
+                <div class="relative h-44"><canvas id="chartTrainAcc"></canvas></div>
+              </div>
+              <div>
+                <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">4. Validation Accuracy vs. Epoch</h4>
+                <div class="relative h-44"><canvas id="chartValAcc"></canvas></div>
+              </div>
+            </div>
+
+            <!-- Sub-Panel 2: Confusion Matrix (2x2 Heatmap Grid + Bar Chart + Case Counts) -->
+            <div id="diagPanelConfusion" class="hidden space-y-4">
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs font-mono">
+                <div class="p-2 rounded-lg bg-slate-50 border border-slate-200">Train Records: <b id="evalTrainCount">0</b></div>
+                <div class="p-2 rounded-lg bg-slate-50 border border-slate-200">Test Records: <b id="evalTestCount">0</b></div>
+                <div class="p-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800">Actual Pass/Fail: <b id="evalActualPassFail">0 / 0</b></div>
+                <div class="p-2 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-800">Pred Pass/Fail: <b id="evalPredPassFail">0 / 0</b></div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                <div class="grid grid-cols-2 gap-2.5 text-center">
+                  <div class="bg-emerald-50 border-2 border-emerald-200 p-3.5 rounded-xl">
+                    <span class="text-xs text-emerald-700 font-semibold block">True Negative (TN)</span>
+                    <span id="valTN" class="text-2xl font-bold text-emerald-800 font-mono">--</span>
+                    <span id="pctTN" class="text-[10px] text-emerald-600 block">Actual Fail • Pred Fail</span>
+                  </div>
+                  <div class="bg-rose-50 border-2 border-rose-200 p-3.5 rounded-xl">
+                    <span class="text-xs text-rose-700 font-semibold block">False Positive (FP)</span>
+                    <span id="valFP" class="text-2xl font-bold text-rose-800 font-mono">--</span>
+                    <span id="pctFP" class="text-[10px] text-rose-600 block">Actual Fail • Pred Pass</span>
+                  </div>
+                  <div class="bg-rose-50 border-2 border-rose-200 p-3.5 rounded-xl">
+                    <span class="text-xs text-rose-700 font-semibold block">False Negative (FN)</span>
+                    <span id="valFN" class="text-2xl font-bold text-rose-800 font-mono">--</span>
+                    <span id="pctFN" class="text-[10px] text-rose-600 block">Actual Pass • Pred Fail</span>
+                  </div>
+                  <div class="bg-emerald-50 border-2 border-emerald-200 p-3.5 rounded-xl">
+                    <span class="text-xs text-emerald-700 font-semibold block">True Positive (TP)</span>
+                    <span id="valTP" class="text-2xl font-bold text-emerald-800 font-mono">--</span>
+                    <span id="pctTP" class="text-[10px] text-emerald-600 block">Actual Pass • Pred Pass</span>
+                  </div>
+                </div>
+                <div>
+                  <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">5. Confusion Matrix Breakdown Chart</h4>
+                  <div class="relative h-52"><canvas id="chartConfusionMatrix"></canvas></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sub-Panel 3: ROC Curve & AUC -->
+            <div id="diagPanelROC" class="hidden">
+              <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">6. Receiver Operating Characteristic (ROC) Curve (Held-Out Test Set)</h4>
+              <div class="relative h-64 w-full"><canvas id="chartRocCurve"></canvas></div>
+            </div>
+
+            <!-- Sub-Panel 4: Actual vs Predicted & Probability Distribution -->
+            <div id="diagPanelPredDist" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">7. Actual vs. Predicted Performance</h4>
+                <div class="relative h-56"><canvas id="chartActualVsPred"></canvas></div>
+              </div>
+              <div>
+                <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">8. Predicted Pass Probability Distribution</h4>
+                <div class="relative h-56"><canvas id="chartProbDist"></canvas></div>
+              </div>
+            </div>
+
+            <!-- Sub-Panel 5: Permutation Feature Sensitivity -->
+            <div id="diagPanelWeights" class="hidden space-y-2">
+              <div class="flex items-center justify-between">
+                <h4 class="text-[11px] font-bold text-slate-700 uppercase">Empirical Feature Sensitivity (Held-Out Test Permutation Shift |&Delta;P|)</h4>
+                <span class="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Post-hoc perturbation (non-linear ANN weights)</span>
+              </div>
+              <div class="relative h-56 w-full"><canvas id="weightsChart"></canvas></div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- =======================================================================
+         MIDDLE ROW: STEP 4 LIVE STUDENT PREDICTOR & DATASET EXPLORER TABLE
+         (Matches ml_dashboard.html Bottom 6-col / 6-col Grid)
+         ======================================================================= -->
+    <div id="sectionStep4" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- LEFT 6 COLS: Step 4 Live Student Outcome Predictor (10 Inputs + Presets) -->
+      <section class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <div class="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 bg-slate-50/70">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-600"></span>
+            <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Step 4: Individual Student Predictor</h2>
+          </div>
+          <div class="flex gap-1.5">
+            <button id="fillHighAchieverBtn" type="button" class="px-2 py-1 rounded text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100">High Achiever</button>
+            <button id="fillAtRiskBtn" type="button" class="px-2 py-1 rounded text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100">At-Risk Student</button>
+          </div>
+        </div>
+
+        <div class="p-5 flex-1 flex flex-col justify-between gap-4">
+          <form id="studentPredictForm" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+              <label for="predAge" class="block text-[10px] font-semibold text-slate-600">1. Age (16–25)</label>
+              <input id="predAge" type="number" min="15" max="35" step="1" value="20" class="w-full mt-0.5 bg-white border border-slate-300 rounded px-2 py-1 font-mono font-bold text-slate-800">
+            </div>
+            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+              <label for="predGender" class="block text-[10px] font-semibold text-slate-600">2. Gender</label>
+              <select id="predGender" class="w-full mt-0.5 bg-white border border-slate-300 rounded px-2 py-1 font-semibold text-slate-800">
+                <option value="Female">Female</option>
+                <option value="Male">Male</option>
+              </select>
+            </div>
+            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+              <label for="predAttendance" class="block text-[10px] font-semibold text-slate-600">3. Attendance (%)</label>
+              <input id="predAttendance" type="number" min="0" max="100" step="1" value="82" class="w-full mt-0.5 bg-white border border-slate-300 rounded px-2 py-1 font-mono font-bold text-slate-800">
+            </div>
+            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+              <label for="predStudyHours" class="block text-[10px] font-semibold text-slate-600">4. Study Hours/Day</label>
+              <input id="predStudyHours" type="number" min="0" max="14" step="0.5" value="5.5" class="w-full mt-0.5 bg-white border border-slate-300 rounded px-2 py-1 font-mono font-bold text-slate-800">
+            </div>
+            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+              <label for="predPrevScore" class="block text-[10px] font-semibold text-slate-600">5. Previous Score</label>
+              <input id="predPrevScore" type="number" min="0" max="100" step="1" value="74" class="w-full mt-0.5 bg-white border border-slate-300 rounded px-2 py-1 font-mono font-bold text-slate-800">
+            </div>
+            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+              <label for="predAssignScore" class="block text-[10px] font-semibold text-slate-600">6. Assignment Score</label>
+              <input id="predAssignScore" type="number" min="0" max="100" step="1" value="78" class="w-full mt-0.5 bg-white border border-slate-300 rounded px-2 py-1 font-mono font-bold text-slate-800">
+            </div>
+            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+              <label for="predParticipation" class="block text-[10px] font-semibold text-slate-600">7. Participation</label>
+              <input id="predParticipation" type="number" min="0" max="100" step="1" value="72" class="w-full mt-0.5 bg-white border border-slate-300 rounded px-2 py-1 font-mono font-bold text-slate-800">
+            </div>
+            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+              <label for="predSleepHours" class="block text-[10px] font-semibold text-slate-600">8. Sleep Hours</label>
+              <input id="predSleepHours" type="number" min="3" max="12" step="0.5" value="7.0" class="w-full mt-0.5 bg-white border border-slate-300 rounded px-2 py-1 font-mono font-bold text-slate-800">
+            </div>
+            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+              <label for="predInternet" class="block text-[10px] font-semibold text-slate-600">9. Internet Access</label>
+              <select id="predInternet" class="w-full mt-0.5 bg-white border border-slate-300 rounded px-2 py-1 font-semibold text-slate-800">
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200">
+              <label for="predExtra" class="block text-[10px] font-semibold text-slate-600">10. Extracurricular</label>
+              <select id="predExtra" class="w-full mt-0.5 bg-white border border-slate-300 rounded px-2 py-1 font-semibold text-slate-800">
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+            <div class="col-span-2 flex items-end gap-2">
+              <button id="runStudentPredictBtn" type="submit" class="flex-1 py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm transition">
+                Predict Student Outcome
+              </button>
+              <button id="exportSinglePredictionBtn" type="button" class="py-2 px-3 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 font-semibold text-xs transition">
+                Export CSV
+              </button>
+            </div>
+          </form>
+
+          <!-- Dark Live Inference Result Card (Matches ml_dashboard.html) -->
+          <div class="p-4 rounded-xl bg-slate-900 text-white flex flex-col gap-2.5 shadow-md">
+            <div class="flex items-center justify-between">
+              <span class="text-xs uppercase tracking-wider text-slate-400 font-bold">ANN Predicted Performance</span>
+              <span id="predClassBadge" class="px-2.5 py-1 rounded-full text-xs font-bold bg-slate-700 text-slate-200">Train ANN to Predict</span>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs mb-1 font-mono">
+                <span id="predProbFailText" class="text-sky-400">Fail (0): --%</span>
+                <span id="predProbPassText" class="font-bold text-rose-400">Pass (1): --%</span>
+              </div>
+              <div class="w-full bg-slate-800 rounded-full h-3 overflow-hidden flex">
+                <div id="predProbBar0" class="bg-sky-500 h-full transition-all duration-200" style="width: 50%;"></div>
+                <div id="predProbBar1" class="bg-rose-500 h-full transition-all duration-200" style="width: 50%;"></div>
+              </div>
+              <div class="flex justify-between text-[10px] text-slate-400 mt-1 font-mono">
+                <span>0.0 (Fail)</span>
+                <span id="predThresholdLabel">Threshold: 0.50</span>
+                <span>1.0 (Pass)</span>
+              </div>
+            </div>
+
+            <p id="predInterpretationText" class="text-[11px] text-slate-300 leading-relaxed border-t border-slate-800 pt-2">
+              Predictions are educational estimates transformed with training-set parameters and are not guaranteed academic outcomes.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT 6 COLS: Dataset Records Explorer & Feature Statistics Table -->
+      <section class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-slate-600"></span>
+            <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Dataset Records & Statistics Explorer</h2>
+          </div>
+          <div class="inline-flex p-0.5 bg-slate-200/80 rounded-lg text-xs">
+            <button id="btnViewRecords" type="button" class="px-2.5 py-1 rounded-md bg-white text-slate-900 font-semibold shadow-sm">Top 15 Records</button>
+            <button id="btnViewStats" type="button" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium">Feature Statistics</button>
+          </div>
+        </div>
+
+        <div class="p-4 flex-1 flex flex-col justify-between">
+          <!-- Preview Records Table -->
+          <div id="recordsTableContainer" class="overflow-x-auto flex-1 max-h-80 border border-slate-200 rounded-xl">
+            <table class="w-full text-left text-xs font-mono">
+              <thead class="bg-slate-100 text-slate-700 uppercase text-[10px] sticky top-0 border-b border-slate-200">
+                <tr id="tableHeaderRow"></tr>
+              </thead>
+              <tbody id="tableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+            </table>
+          </div>
+
+          <!-- Feature Summary Statistics Table -->
+          <div id="statsTableContainer" class="hidden overflow-x-auto flex-1 max-h-80 border border-slate-200 rounded-xl">
+            <table class="w-full text-left text-xs font-mono">
+              <thead class="bg-slate-100 text-slate-700 uppercase text-[10px] sticky top-0 border-b border-slate-200">
+                <tr>
+                  <th class="py-2 px-2.5">Feature</th>
+                  <th class="py-2 px-2.5">Role</th>
+                  <th class="py-2 px-2.5 text-right">Mean/Mode</th>
+                  <th class="py-2 px-2.5 text-right">Std</th>
+                  <th class="py-2 px-2.5 text-right">Min</th>
+                  <th class="py-2 px-2.5 text-right">Max</th>
+                </tr>
+              </thead>
+              <tbody id="generatorStatsTableBody" class="divide-y divide-slate-100 text-slate-700 text-[11px]"></tbody>
+            </table>
+          </div>
+
+          <div class="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+            <span id="tableSummaryInfo" class="font-mono">Showing top 15 of 1,000 student records</span>
+            <div class="flex gap-2">
+              <button id="expActiveCsvBtn" type="button" class="text-indigo-600 hover:underline font-semibold">Download Dataset CSV</button>
+              <span>•</span>
+              <button id="expTestPredsCsvBtn" type="button" class="text-emerald-600 hover:underline font-semibold">Download Test Predictions CSV</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- =======================================================================
+         LOWER STUDIO DECK: 10 INTERACTIVE COHORT CHARTS, ANN TOPOLOGY & THEORY,
+         AND ACADEMIC DOCUMENTATION (Clean Studio Switcher)
+         ======================================================================= -->
+    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="px-5 py-3.5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 bg-slate-50/70">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+          <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Deep Learning Laboratory: Cohort EDA, ANN Architecture & Academic Report</h2>
+        </div>
+        <div class="flex flex-wrap gap-1.5">
+          <button id="deckBtnEda" type="button" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white shadow-sm">1. Cohort Exploration (10 Charts)</button>
+          <button id="deckBtnTheory" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-slate-700 border border-slate-200 hover:bg-slate-100">2. ANN Topology & Math Theory</button>
+          <button id="deckBtnDocs" type="button" class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-slate-700 border border-slate-200 hover:bg-slate-100">3. Academic Documentation & Viva</button>
+        </div>
+      </div>
+
+      <!-- DECK PANEL 1: 10 Interactive Dataset Exploration Charts -->
+      <div id="deckPanelEda" class="p-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">1. Pass vs. Fail Balance</h4>
+            <div class="relative h-44"><canvas id="chartPassFail"></canvas></div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">2. Attendance Dist (%)</h4>
+            <div class="relative h-44"><canvas id="chartAttendanceDist"></canvas></div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">3. Study Hours Dist</h4>
+            <div class="relative h-44"><canvas id="chartStudyHoursDist"></canvas></div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">4. Previous Score Dist</h4>
+            <div class="relative h-44"><canvas id="chartPrevScoreDist"></canvas></div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">5. Assignment Score Dist</h4>
+            <div class="relative h-44"><canvas id="chartAssignScoreDist"></canvas></div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">6. Final Score Dist</h4>
+            <div class="relative h-44"><canvas id="chartFinalScoreDist"></canvas></div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">7. Performance by Gender</h4>
+            <div class="relative h-44"><canvas id="chartPerfGender"></canvas></div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">8. Perf by Attendance Group</h4>
+            <div class="relative h-44"><canvas id="chartPerfAttendanceGroup"></canvas></div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">9. Perf by Study-Hour Group</h4>
+            <div class="relative h-44"><canvas id="chartPerfStudyGroup"></canvas></div>
+          </div>
+          <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+            <h4 class="text-[11px] font-bold text-slate-700 uppercase mb-1">10. Perf by Extracurricular</h4>
+            <div class="relative h-44"><canvas id="chartPerfExtra"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DECK PANEL 2: ANN Architecture Topology & Deep Learning Mathematical Interpretation -->
+      <div id="deckPanelTheory" class="hidden p-5 space-y-5">
+        <div class="grid grid-cols-2 sm:grid-cols-6 gap-2.5 text-xs">
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <span class="text-[10px] text-slate-500 block">Input Layer</span>
+            <span id="interpInputDim" class="font-bold font-mono text-slate-900">13 Encoded Units</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <span class="text-[10px] text-slate-500 block">Hidden Layer(s)</span>
+            <span id="interpHiddenConfig" class="font-bold font-mono text-violet-700">16 ReLU</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <span class="text-[10px] text-slate-500 block">Output Layer</span>
+            <span id="interpOutputConfig" class="font-bold font-mono text-emerald-700">1 Sigmoid</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <span class="text-[10px] text-slate-500 block">Optimizer & LR</span>
+            <span id="interpOptimizer" class="font-bold font-mono text-slate-900">Adam (0.001)</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <span class="text-[10px] text-slate-500 block">Loss Function</span>
+            <span class="font-bold font-mono text-slate-900">Binary Cross-Entropy</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+            <span class="text-[10px] text-slate-500 block">Total Parameters</span>
+            <span id="interpParamCount" class="font-bold font-mono text-indigo-700">—</span>
+          </div>
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-900 text-white border border-slate-800">
+          <div class="flex items-center justify-between text-xs text-slate-400 mb-2">
+            <span class="font-semibold text-white">Live Feedforward Artificial Neural Network Topology</span>
+            <span class="font-mono text-[11px] text-sky-400">Standardized & One-Hot Inputs &rarr; ReLU Hidden &rarr; Sigmoid Output</span>
+          </div>
+          <div id="annSvgContainer" class="w-full overflow-x-auto flex justify-center"></div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-600">
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <h4 class="font-bold text-indigo-900">Forward Propagation & Activation Functions (ReLU + Sigmoid)</h4>
+            <p>Input features $\mathbf{x}$ pass through dense layers where each neuron computes $z = \mathbf{w}^T\mathbf{x} + b$. Hidden neurons apply $\text{ReLU}(z)=\max(0,z)$ to model non-linear interactions, while the output neuron applies $\sigma(z)=\frac{1}{1+e^{-z}}$ to output a calibrated probability $P(\text{Pass}) \in (0,1)$.</p>
+            <div class="math-box">a&#8317;&#185;&#8318; = max(0, W&#8317;&#185;&#8318;x + b&#8317;&#185;&#8318;) &nbsp;|&nbsp; y&#770; = 1 / (1 + exp(&minus;(W&#8317;&#178;&#8318;a&#8317;&#185;&#8318; + b&#8317;&#178;&#8318;)))</div>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <h4 class="font-bold text-indigo-900">Binary Cross-Entropy Loss, Backpropagation & Adam Optimizer</h4>
+            <p>Prediction error is quantified by Binary Cross-Entropy. Backpropagation applies the chain rule from output to input layers to compute weight gradients $\nabla_\theta \mathcal{L}$, and Adam updates parameters using first ($m_t$) and second ($v_t$) gradient moments. Note: Distributed hidden weights do not act as simple linear coefficients.</p>
+            <div class="math-box">L(y, y&#770;) = &minus;(1/N)&sum;[y&middot;ln(y&#770;) + (1&minus;y)&middot;ln(1&minus;y&#770;)] &nbsp;|&nbsp; &theta; &larr; &theta; &minus; &eta;&middot;m&#770;_t / (&radic;v&#770;_t + &epsilon;)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DECK PANEL 3: Complete Academic Project Documentation -->
+      <div id="deckPanelDocs" class="hidden p-5 space-y-5 text-xs text-slate-700 leading-relaxed">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-900 uppercase">1. Introduction & Problem Statement</h4>
+            <p><strong>EduPredict</strong> applies Educational Data Mining (EDM) and Artificial Neural Networks (ANN) to identify students at risk of academic failure early enough for faculty advising and remedial intervention. Traditional linear cutoffs miss non-linear interactions among attendance, daily study hours, prior exam scores, assignment completion, participation, and sleep hygiene.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-900 uppercase">2. Objectives & Literature Review</h4>
+            <p><strong>Objectives:</strong> Synthesize cohorts, ingest custom CSVs, prevent data leakage via training-only preprocessing, train a TensorFlow.js feedforward ANN, evaluate ROC/threshold sensitivity, and predict individual outcomes.</p>
+            <p><strong>Literature:</strong> Grounded in Cortez &amp; Silva (2008) and Romero &amp; Ventura (2010) on student performance analytics, Rumelhart et al. (1986) on backpropagation, Nair &amp; Hinton (2010) on ReLU, and Kingma &amp; Ba (2015) on Adam optimization.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-900 uppercase">3. Research Methodology & Leakage Prevention</h4>
+            <p><code>Student_ID</code>, <code>Final_Score</code>, and <code>Performance</code> are excluded from model inputs. Numerical features undergo mean imputation and Z-score standardization $(x-\mu_{\text{train}})/\sigma_{\text{train}}$; categorical features undergo mode imputation and one-hot encoding fitted strictly on the training split.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-900 uppercase">4. Limitations & Conclusion</h4>
+            <p><strong>Limitations:</strong> Synthetic cohorts follow parametric assumptions; mean/mode imputation assumes Missing At Random (MAR); severe class imbalance requires threshold tuning; over-parameterized networks can overfit small cohorts; neural weights require post-hoc sensitivity analysis rather than direct linear interpretation.</p>
+          </div>
+        </div>
+        <div id="docLiveResultsBox" class="p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 font-mono text-xs text-indigo-950">
+          Live Experimental Results: Train the neural network in Step 2 to populate held-out test metrics here automatically.
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-4 mt-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+      <p>EduPredict Studio – Student Performance Prediction Using Artificial Neural Networks • TensorFlow.js + Chart.js + PapaParse</p>
+      <div class="flex items-center gap-4">
+        <span>Zero-Backend Browser Execution</span>
+        <span>CDN Libraries (Internet Required Unless Bundled)</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- =========================================================================
+       MODAL 1: PROJECT & VIVA GUIDE MODAL (Matches ml_dashboard.html)
+       ========================================================================= -->
+  <div id="modalGuide" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+        <h3 class="text-base font-bold text-slate-900">EduPredict ANN Project & Viva Examination Guide</h3>
+        <button id="btnCloseGuide" type="button" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+      <div class="text-xs text-slate-600 flex flex-col gap-3 leading-relaxed">
+        <p class="font-medium text-slate-800">This standalone application demonstrates the complete deep learning workflow for MBA Data Science & Artificial Intelligence:</p>
+        <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
+          <h4 class="font-bold text-indigo-900 mb-1">1. Synthetic Cohort Generation & Custom CSV Upload:</h4>
+          <p>Generates realistic student records (100 to 5,000 rows) across 13 academic attributes with a configurable Passing Score Cutoff (default 40), or ingests external CSV files via PapaParse with full validation.</p>
+        </div>
+        <div class="bg-violet-50 p-3 rounded-xl border border-violet-100">
+          <h4 class="font-bold text-violet-900 mb-1">2. Zero-Leakage Preprocessing & Genuine TensorFlow.js ANN:</h4>
+          <p>Excludes <code>Student_ID</code>, <code>Final_Score</code>, and <code>Performance</code> from inputs, fits mean/mode imputation, Z-score standardization, and one-hot encoding strictly on the training set, and trains a feedforward neural network (ReLU hidden layer(s) + Sigmoid output) using Adam and Binary Cross-Entropy.</p>
+        </div>
+        <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+          <h4 class="font-bold text-emerald-900 mb-1">3. Interactive 2D Decision Surface, ROC & Threshold Analyzer:</h4>
+          <p>Visualizes the learned ANN probability surface over any pair of student features, plots live training/validation loss and accuracy curves, and updates Confusion Matrix, Precision, Recall, and F1 in real time as you adjust the classification threshold $\tau$.</p>
+        </div>
+        <div class="bg-amber-50 p-3 rounded-xl border border-amber-100">
+          <h4 class="font-bold text-amber-900 mb-1">4. Individual Student Outcome Simulator & Exports:</h4>
+          <p>Transforms individual student profiles with the exact training preprocessor and runs a live TensorFlow.js forward pass to estimate Pass/Fail probabilities.</p>
+        </div>
+      </div>
+      <div class="mt-5 pt-3 border-t border-slate-100 flex justify-end">
+        <button id="btnGotItGuide" type="button" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl">Got it, let's explore</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODAL 2: EXPORT CENTER & FORMATTED ACADEMIC REPORT MODAL
+       ========================================================================= -->
+  <div id="modalExport" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
+        <h3 class="text-base font-bold text-slate-900">EduPredict Export Center & Academic Performance Report</h3>
+        <button id="btnCloseExport" type="button" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- 5 Direct Export Action Buttons -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-4">
+        <button id="expSyntheticCsvBtn" type="button" class="p-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 text-xs font-semibold text-slate-800 text-left">
+          1. Synthetic Dataset (.csv)
+        </button>
+        <button id="expUploadedCsvModalBtn" type="button" class="p-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 border border-slate-200 text-xs font-semibold text-slate-800 text-left">
+          2. Active Dataset (.csv)
+        </button>
+        <button id="expTestPredsModalBtn" type="button" class="p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50 border border-slate-200 text-xs font-semibold text-emerald-800 text-left">
+          3. Held-Out Test Predictions (.csv)
+        </button>
+        <button id="expSingleStudentCsvBtn" type="button" class="p-2.5 rounded-xl bg-slate-50 hover:bg-purple-50 border border-slate-200 text-xs font-semibold text-purple-800 text-left">
+          4. Student Prediction (.csv)
+        </button>
+        <button id="expEvalSummaryTxtBtn" type="button" class="p-2.5 rounded-xl bg-slate-50 hover:bg-rose-50 border border-slate-200 text-xs font-semibold text-rose-800 text-left">
+          5. Evaluation Summary (.txt)
+        </button>
+        <button id="expEvalSummaryJsonBtn" type="button" class="p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-800 text-left">
+          6. Model Telemetry (.json)
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-600 mb-2">Formatted Academic Summary Report (Copy directly into your MBA project report or viva notes):</p>
+      <textarea id="txtReportContent" rows="11" readonly class="w-full text-xs font-mono bg-slate-900 text-emerald-400 p-4 rounded-xl border border-slate-800 focus:outline-none"></textarea>
+
+      <div class="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center">
+        <span id="copyConfirmMsg" class="text-xs text-emerald-600 font-semibold hidden">Copied to clipboard!</span>
+        <div class="flex gap-2 ml-auto">
+          <button id="btnCopyReport" type="button" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl flex items-center gap-1.5">
+            <span>Copy Report Text</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       APPLICATION JAVASCRIPT: SYNTHETIC GENERATOR, PAPAPARSE CSV UPLOAD,
+       ZERO-LEAKAGE PREPROCESSING, GENUINE TENSORFLOW.JS ANN, 2D BOUNDARY MESH,
+       18 CHARTS, INDIVIDUAL PREDICTION & EXPORTS
+       ========================================================================= -->
+  <script>
+    // =========================================================================
+    // 1. GLOBAL APPLICATION STATE
+    // =========================================================================
+    const AppState = {
+      sourceType: 'synthetic', // 'synthetic' | 'uploaded'
+      syntheticDataset: [],
+      activeDataset: [],
+      columns: [],
+      targetColumn: 'Performance',
+      positiveClass: '1',
+      negativeClass: '0',
+      selectedFeatures: [],
+      numericalFeatures: [],
+      categoricalFeatures: [],
+      missingValueCount: 0,
+      duplicateRowCount: 0,
+      passingCutoff: 40,
+      seed: 2026,
+
+      // 2D Decision Boundary Axes (selected numerical feature names)
+      axisXFeature: 'Attendance',
+      axisYFeature: 'Study_Hours',
+
+      // Preprocessor fitted strictly on training split
+      preprocessor: null,
+
+      // TensorFlow.js Sequential Neural Network & Training State
+      tfModel: null,
+      isTraining: false,
+      stopRequested: false,
+      trainingHistory: { epochs: [], loss: [], val_loss: [], acc: [], val_acc: [] },
+      modelConfig: {
+        hidden1: 16,
+        hidden2: 0,
+        epochs: 50,
+        batchSize: 32,
+        learningRate: 0.001,
+        trainSplit: 0.80
+      },
+
+      // Held-Out Test Set Evaluation State
+      testEvaluation: null,
+      threshold: 0.50,
+      lastSinglePrediction: null,
+
+      // Chart.js Registry
+      charts: {}
+    };
+
+    // =========================================================================
+    // 2. UTILITIES & SEEDED PRNG
+    // =========================================================================
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const colors = {
+        success: 'bg-emerald-600 text-white',
+        error: 'bg-rose-600 text-white',
+        warning: 'bg-amber-600 text-white',
+        info: 'bg-indigo-600 text-white'
+      };
+      const toast = document.createElement('div');
+      toast.className = `${colors[type] || colors.info} px-4 py-2.5 rounded-xl text-xs font-semibold shadow-lg transition-all duration-300 pointer-events-auto`;
+      toast.textContent = message;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3800);
+    }
+
+    function createSeededRandom(seed) {
+      let a = seed >>> 0;
+      return function() {
+        let t = (a += 0x6D2B79F5);
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function randomNormal(rng) {
+      let u = 0, v = 0;
+      while (u === 0) u = rng();
+      while (v === 0) v = rng();
+      return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    }
+
+    function clamp(val, min, max) {
+      return Math.max(min, Math.min(max, val));
+    }
+
+    function formatPct(val) {
+      if (val === null || val === undefined || isNaN(val)) return '--%';
+      return (val * 100).toFixed(1) + '%';
+    }
+
+    // =========================================================================
+    // 3. SYNTHETIC STUDENT DATASET GENERATOR (13 FEATURES)
+    // =========================================================================
+    function generateSyntheticDataset(size = 1000, passingCutoff = 40, seed = 2026) {
+      const rng = createSeededRandom(seed);
+      const records = [];
+
+      for (let i = 1; i <= size; i++) {
+        const studentId = `STU-${String(i).padStart(4, '0')}`;
+        const age = Math.floor(16 + rng() * 10); // 16–25
+        const gender = rng() < 0.51 ? 'Female' : 'Male';
+
+        const diligence = clamp(randomNormal(rng), -2.5, 2.5);
+        const attendance = Number(clamp(74 + diligence * 11 + randomNormal(rng) * 7, 40, 100).toFixed(1));
+        const studyHours = Number(clamp(4.6 + diligence * 1.6 + randomNormal(rng) * 1.3, 0, 10).toFixed(1));
+        const previousScore = Number(clamp(62 + diligence * 13 + randomNormal(rng) * 9, 0, 100).toFixed(1));
+        const assignmentScore = Number(clamp(66 + diligence * 14 + randomNormal(rng) * 8, 0, 100).toFixed(1));
+        const participation = Number(clamp(60 + diligence * 15 + randomNormal(rng) * 11, 0, 100).toFixed(1));
+        const sleepHours = Number(clamp(6.8 + randomNormal(rng) * 1.3, 3, 10).toFixed(1));
+        const internetAccess = rng() < 0.82 ? 'Yes' : 'No';
+        const extracurricular = rng() < 0.55 ? 'Yes' : 'No';
+
+        const sleepPenalty = Math.abs(sleepHours - 7.5);
+        const sleepBonus = clamp(4.5 - sleepPenalty * 1.4, -2.0, 4.5);
+        const noise = randomNormal(rng) * 6.2;
+
+        const rawFinal =
+          -18.0 +
+          0.28 * attendance +
+          2.45 * studyHours +
+          0.24 * previousScore +
+          0.22 * assignmentScore +
+          0.10 * participation +
+          sleepBonus +
+          (internetAccess === 'Yes' ? 2.5 : 0.0) +
+          (extracurricular === 'Yes' ? 1.5 : 0.0) +
+          noise;
+
+        const finalScore = Number(clamp(rawFinal, 0, 100).toFixed(1));
+        const performance = finalScore >= passingCutoff ? 1 : 0;
+
+        records.push({
+          Student_ID: studentId,
+          Age: age,
+          Gender: gender,
+          Attendance: attendance,
+          Study_Hours: studyHours,
+          Previous_Score: previousScore,
+          Assignment_Score: assignmentScore,
+          Participation: participation,
+          Sleep_Hours: sleepHours,
+          Internet_Access: internetAccess,
+          Extracurricular: extracurricular,
+          Final_Score: finalScore,
+          Performance: performance
+        });
+      }
+      return records;
+    }
+
+    // =========================================================================
+    // 4. SCHEMA ANALYSIS, FEATURE SELECTION & AXIS DROPDOWNS
+    // =========================================================================
+    function analyzeDatasetSchema(dataset, preferredTarget = 'Performance') {
+      if (!dataset || dataset.length === 0) return;
+
+      const cols = Object.keys(dataset[0]);
+      AppState.columns = cols;
+
+      let missingCount = 0;
+      const seenRows = new Set();
+      let duplicateCount = 0;
+
+      dataset.forEach((row) => {
+        const sig = cols.map((c) => String(row[c] ?? '')).join('|');
+        if (seenRows.has(sig)) duplicateCount++;
+        else seenRows.add(sig);
+
+        cols.forEach((c) => {
+          const val = row[c];
+          if (val === null || val === undefined || String(val).trim() === '') missingCount++;
+        });
+      });
+
+      AppState.missingValueCount = missingCount;
+      AppState.duplicateRowCount = duplicateCount;
+
+      const targetCol = cols.includes(preferredTarget) ? preferredTarget : cols[cols.length - 1];
+      AppState.targetColumn = targetCol;
+
+      const targetSelect = document.getElementById('targetColumnSelect');
+      targetSelect.innerHTML = '';
+      cols.forEach((col) => {
+        const opt = document.createElement('option');
+        opt.value = col;
+        opt.textContent = col;
+        if (col === targetCol) opt.selected = true;
+        targetSelect.appendChild(opt);
+      });
+
+      updateTargetClassesAndFeatures(targetCol, true);
+    }
+
+    function updateTargetClassesAndFeatures(targetCol, resetRecommended = false) {
+      const dataset = AppState.activeDataset;
+      AppState.targetColumn = targetCol;
+
+      const uniqueVals = Array.from(
+        new Set(
+          dataset
+            .map((r) => r[targetCol])
+            .filter((v) => v !== null && v !== undefined && String(v).trim() !== '')
+            .map((v) => String(v).trim())
+        )
+      );
+
+      const posSelect = document.getElementById('positiveClassSelect');
+      const negSelect = document.getElementById('negativeClassSelect');
+      posSelect.innerHTML = '';
+      negSelect.innerHTML = '';
+
+      uniqueVals.slice(0, 25).forEach((val) => {
+        const opt1 = document.createElement('option');
+        opt1.value = val;
+        opt1.textContent = val === '1' ? '1 (Pass)' : val;
+        posSelect.appendChild(opt1);
+
+        const opt2 = document.createElement('option');
+        opt2.value = val;
+        opt2.textContent = val === '0' ? '0 (Fail)' : val;
+        negSelect.appendChild(opt2);
+      });
+
+      if (uniqueVals.includes('1') && uniqueVals.includes('0')) {
+        AppState.positiveClass = '1';
+        AppState.negativeClass = '0';
+      } else if (uniqueVals.includes('Pass') && uniqueVals.includes('Fail')) {
+        AppState.positiveClass = 'Pass';
+        AppState.negativeClass = 'Fail';
+      } else if (uniqueVals.length >= 2) {
+        AppState.positiveClass = uniqueVals[0];
+        AppState.negativeClass = uniqueVals[1];
+      } else if (uniqueVals.length === 1) {
+        AppState.positiveClass = uniqueVals[0];
+        AppState.negativeClass = uniqueVals[0];
+      }
+
+      posSelect.value = AppState.positiveClass;
+      negSelect.value = AppState.negativeClass;
+
+      const excludedByDefault = new Set(['Student_ID', 'Final_Score', targetCol]);
+      const numCols = [];
+      const catCols = [];
+
+      AppState.columns.forEach((col) => {
+        if (col === targetCol) return;
+        const nonEmpty = dataset
+          .map((r) => r[col])
+          .filter((v) => v !== null && v !== undefined && String(v).trim() !== '');
+        const numericCount = nonEmpty.filter((v) => !isNaN(Number(v))).length;
+        if (nonEmpty.length > 0 && numericCount / nonEmpty.length >= 0.85) numCols.push(col);
+        else catCols.push(col);
+      });
+
+      AppState.numericalFeatures = numCols;
+      AppState.categoricalFeatures = catCols;
+
+      if (resetRecommended || AppState.selectedFeatures.length === 0) {
+        AppState.selectedFeatures = AppState.columns.filter((c) => !excludedByDefault.has(c));
+        if (AppState.selectedFeatures.length === 0) {
+          AppState.selectedFeatures = AppState.columns.filter((c) => c !== targetCol);
+        }
+      } else {
+        AppState.selectedFeatures = AppState.selectedFeatures.filter((c) => c !== targetCol);
+      }
+
+      renderFeatureCheckboxes();
+      updateAxisDropdowns();
+      updateAllDatasetViews();
+    }
+
+    function renderFeatureCheckboxes() {
+      const container = document.getElementById('featureCheckboxContainer');
+      container.innerHTML = '';
+
+      AppState.columns.forEach((col) => {
+        if (col === AppState.targetColumn) return;
+        const isChecked = AppState.selectedFeatures.includes(col);
+        const isLeakage = col === 'Student_ID' || col === 'Final_Score';
+
+        const label = document.createElement('label');
+        label.className = `inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[11px] cursor-pointer ${
+          isChecked
+            ? 'bg-indigo-50 border-indigo-300 text-indigo-900 font-semibold'
+            : isLeakage
+            ? 'bg-amber-50/60 border-amber-200 text-amber-800'
+            : 'bg-slate-100 border-slate-200 text-slate-600'
+        }`;
+
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.value = col;
+        chk.checked = isChecked;
+        chk.addEventListener('change', () => {
+          if (chk.checked) {
+            if (!AppState.selectedFeatures.includes(col)) AppState.selectedFeatures.push(col);
+          } else {
+            AppState.selectedFeatures = AppState.selectedFeatures.filter((f) => f !== col);
+          }
+          renderFeatureCheckboxes();
+          updateAxisDropdowns();
+          renderAnnArchitectureDiagram();
+        });
+
+        const span = document.createElement('span');
+        span.textContent = isLeakage ? `${col} (Excl)` : col;
+
+        label.appendChild(chk);
+        label.appendChild(span);
+        container.appendChild(label);
+      });
+    }
+
+    function updateAxisDropdowns() {
+      const selX = document.getElementById('selAxisX');
+      const selY = document.getElementById('selAxisY');
+      const activeNum = AppState.selectedFeatures.filter((f) => AppState.numericalFeatures.includes(f));
+      const pool = activeNum.length >= 2 ? activeNum : AppState.numericalFeatures;
+
+      selX.innerHTML = '';
+      selY.innerHTML = '';
+
+      pool.forEach((col, idx) => {
+        const optX = document.createElement('option');
+        optX.value = col;
+        optX.textContent = col;
+        selX.appendChild(optX);
+
+        const optY = document.createElement('option');
+        optY.value = col;
+        optY.textContent = col;
+        selY.appendChild(optY);
+      });
+
+      if (pool.includes('Attendance') && pool.includes('Study_Hours')) {
+        AppState.axisXFeature = 'Attendance';
+        AppState.axisYFeature = 'Study_Hours';
+      } else if (pool.length >= 2) {
+        AppState.axisXFeature = pool[0];
+        AppState.axisYFeature = pool[1];
+      } else if (pool.length === 1) {
+        AppState.axisXFeature = pool[0];
+        AppState.axisYFeature = pool[0];
+      }
+
+      selX.value = AppState.axisXFeature;
+      selY.value = AppState.axisYFeature;
+    }
+
+    // =========================================================================
+    // 5. UPDATE DATASET KPIs, PREVIEW TABLES, 2D BOUNDARY & 10 EDA CHARTS
+    // =========================================================================
+    function updateAllDatasetViews() {
+      const data = AppState.activeDataset;
+      if (!data || data.length === 0) return;
+
+      const total = data.length;
+      const targetCol = AppState.targetColumn;
+      const posVal = String(AppState.positiveClass);
+
+      let passCount = 0, failCount = 0;
+      let sumAtt = 0, cntAtt = 0;
+      let sumStudy = 0, cntStudy = 0;
+      let sumFinal = 0, cntFinal = 0;
+
+      data.forEach((r) => {
+        if (String(r[targetCol] ?? '').trim() === posVal) passCount++;
+        else failCount++;
+
+        if (r.Attendance !== undefined && !isNaN(Number(r.Attendance))) {
+          sumAtt += Number(r.Attendance);
+          cntAtt++;
+        }
+        if (r.Study_Hours !== undefined && !isNaN(Number(r.Study_Hours))) {
+          sumStudy += Number(r.Study_Hours);
+          cntStudy++;
+        }
+        if (r.Final_Score !== undefined && !isNaN(Number(r.Final_Score))) {
+          sumFinal += Number(r.Final_Score);
+          cntFinal++;
+        }
+      });
+
+      document.getElementById('kpiTotalStudents').textContent = total.toLocaleString();
+      document.getElementById('kpiPassCount').textContent = passCount.toLocaleString();
+      document.getElementById('kpiFailCount').textContent = failCount.toLocaleString();
+      document.getElementById('kpiPassPct').textContent = ((passCount / total) * 100).toFixed(1) + '%';
+      document.getElementById('kpiFailPct').textContent = ((failCount / total) * 100).toFixed(1) + '%';
+      document.getElementById('kpiAvgAttendance').textContent = cntAtt ? (sumAtt / cntAtt).toFixed(1) + '%' : 'N/A';
+      document.getElementById('kpiAvgStudy').textContent = cntStudy ? (sumStudy / cntStudy).toFixed(1) + 'h' : 'N/A';
+      document.getElementById('kpiAvgFinalScore').textContent = cntFinal ? (sumFinal / cntFinal).toFixed(1) : 'N/A';
+
+      const selNum = AppState.selectedFeatures.filter((f) => AppState.numericalFeatures.includes(f)).length;
+      const selCat = AppState.selectedFeatures.filter((f) => AppState.categoricalFeatures.includes(f)).length;
+
+      document.getElementById('statRows').textContent = total.toLocaleString();
+      document.getElementById('statCols').textContent = `${AppState.selectedFeatures.length} (${selNum} Num / ${selCat} Cat)`;
+      document.getElementById('statClasses').textContent = `Pass: ${passCount} | Fail: ${failCount}`;
+      document.getElementById('diagMissingCount').textContent = AppState.missingValueCount;
+      document.getElementById('diagDuplicateCount').textContent = AppState.duplicateRowCount;
+
+      const srcLabel = AppState.sourceType === 'synthetic'
+        ? `Synthetic (${total.toLocaleString()} Students)`
+        : `Uploaded CSV (${total.toLocaleString()} Students)`;
+      document.getElementById('step1Status').textContent = srcLabel;
+      document.getElementById('overviewDatasetTag').textContent = srcLabel.toUpperCase();
+
+      renderPreviewAndStatsTables();
+      updateExplorationCharts();
+      renderAnnArchitectureDiagram();
+      renderDecisionBoundaryCanvas();
+    }
+
+    function renderPreviewAndStatsTables() {
+      const data = AppState.activeDataset;
+      if (!data || data.length === 0) return;
+
+      const cols = AppState.columns;
+      const headRow = document.getElementById('tableHeaderRow');
+      const tbody = document.getElementById('tableBody');
+
+      headRow.innerHTML = cols.map((c) => `<th class="px-2.5 py-2 whitespace-nowrap">${c}</th>`).join('');
+      tbody.innerHTML = data.slice(0, 15).map((row) => {
+        return `<tr class="hover:bg-slate-50">${cols.map((c) => {
+          const val = row[c];
+          if (c === AppState.targetColumn) {
+            const isPass = String(val) === String(AppState.positiveClass);
+            return `<td class="px-2.5 py-1.5 font-bold ${isPass ? 'text-rose-600' : 'text-sky-600'}">${val} (${isPass ? 'Pass' : 'Fail'})</td>`;
+          }
+          return `<td class="px-2.5 py-1.5 whitespace-nowrap">${val ?? ''}</td>`;
+        }).join('')}</tr>`;
+      }).join('');
+
+      document.getElementById('tableSummaryInfo').textContent =
+        `Showing top ${Math.min(15, data.length)} of ${data.length.toLocaleString()} student records`;
+
+      // Populate Feature Statistics Table
+      const statsBody = document.getElementById('generatorStatsTableBody');
+      statsBody.innerHTML = cols.map((col) => {
+        const isTarget = col === AppState.targetColumn;
+        const isExcl = col === 'Student_ID' || col === 'Final_Score';
+        const role = isTarget ? 'Target (y)' : isExcl ? 'Excluded' : AppState.selectedFeatures.includes(col) ? 'Input (X)' : 'Unselected';
+        const isNum = AppState.numericalFeatures.includes(col) || isTarget;
+
+        let meanStr = '—', stdStr = '—', minStr = '—', maxStr = '—';
+        if (isNum && col !== 'Student_ID') {
+          const vals = data.map((r) => Number(r[col])).filter((v) => !isNaN(v));
+          if (vals.length > 0) {
+            const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+            const std = Math.sqrt(vals.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / vals.length);
+            meanStr = mean.toFixed(2);
+            stdStr = std.toFixed(2);
+            minStr = Math.min(...vals).toFixed(1);
+            maxStr = Math.max(...vals).toFixed(1);
+          }
+        } else {
+          const counts = {};
+          data.forEach((r) => { const k = String(r[col] ?? ''); counts[k] = (counts[k] || 0) + 1; });
+          const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+          if (top) meanStr = `${top[0]} (${Math.round((top[1] / data.length) * 100)}%)`;
+        }
+
+        return `<tr class="hover:bg-slate-50">
+          <td class="py-1.5 px-2.5 font-semibold text-slate-900">${col}</td>
+          <td class="py-1.5 px-2.5">${role}</td>
+          <td class="py-1.5 px-2.5 text-right">${meanStr}</td>
+          <td class="py-1.5 px-2.5 text-right">${stdStr}</td>
+          <td class="py-1.5 px-2.5 text-right">${minStr}</td>
+          <td class="py-1.5 px-2.5 text-right">${maxStr}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    // =========================================================================
+    // 6. 2D DECISION BOUNDARY CANVAS RENDERER (GENUINE TF.JS BATCH INFERENCE)
+    // =========================================================================
+    function renderDecisionBoundaryCanvas() {
+      const canvas = document.getElementById('boundaryCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width;
+      const height = canvas.height;
+
+      const data = AppState.activeDataset;
+      if (!data || data.length === 0) return;
+
+      const colX = AppState.axisXFeature;
+      const colY = AppState.axisYFeature;
+      const targetCol = AppState.targetColumn;
+      const posVal = String(AppState.positiveClass);
+
+      const valsX = data.map((r) => Number(r[colX])).filter((v) => !isNaN(v));
+      const valsY = data.map((r) => Number(r[colY])).filter((v) => !isNaN(v));
+      const minX = valsX.length ? Math.min(...valsX) : 0;
+      const maxX = valsX.length ? Math.max(...valsX) : 100;
+      const minY = valsY.length ? Math.min(...valsY) : 0;
+      const maxY = valsY.length ? Math.max(...valsY) : 10;
+
+      const spanX = (maxX - minX) || 10;
+      const spanY = (maxY - minY) || 10;
+      const x0 = minX - spanX * 0.08;
+      const x1 = maxX + spanX * 0.08;
+      const y0 = minY - spanY * 0.08;
+      const y1 = maxY + spanY * 0.08;
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, width, height);
+
+      // If ANN is trained, evaluate 2D grid in a single batched tf.tidy() pass
+      if (AppState.tfModel && AppState.preprocessor) {
+        const gridSteps = 55;
+        const cellW = width / gridSteps;
+        const cellH = height / gridSteps;
+
+        // Build baseline row using training means and modes
+        const baseRow = {};
+        AppState.preprocessor.selectedFeatures.forEach((f) => {
+          if (AppState.preprocessor.numStats[f]) baseRow[f] = AppState.preprocessor.numStats[f].mean;
+          else if (AppState.preprocessor.catStats[f]) baseRow[f] = AppState.preprocessor.catStats[f].mode;
+        });
+
+        const gridVectors = [];
+        for (let gx = 0; gx < gridSteps; gx++) {
+          const valX = x0 + (gx / gridSteps) * (x1 - x0);
+          for (let gy = 0; gy < gridSteps; gy++) {
+            const valY = y1 - (gy / gridSteps) * (y1 - y0);
+            const sampleRow = { ...baseRow, [colX]: valX, [colY]: valY };
+            gridVectors.push(transformRowWithPreprocessor(sampleRow, AppState.preprocessor));
+          }
+        }
+
+        const probs = tf.tidy(() => {
+          const gridTensor = tf.tensor2d(gridVectors, [gridVectors.length, AppState.preprocessor.inputDimension]);
+          const out = AppState.tfModel.predict(gridTensor);
+          return out.dataSync();
+        });
+
+        let idx = 0;
+        for (let gx = 0; gx < gridSteps; gx++) {
+          for (let gy = 0; gy < gridSteps; gy++) {
+            const prob = probs[idx++];
+            let r, g, b, alpha;
+            if (prob < AppState.threshold) {
+              const intensity = clamp((AppState.threshold - prob) / Math.max(0.05, AppState.threshold), 0, 1);
+              r = Math.round(15 + intensity * (14 - 15));
+              g = Math.round(23 + intensity * (165 - 23));
+              b = Math.round(42 + intensity * (233 - 42));
+              alpha = 0.25 + intensity * 0.55;
+            } else {
+              const intensity = clamp((prob - AppState.threshold) / Math.max(0.05, 1 - AppState.threshold), 0, 1);
+              r = Math.round(15 + intensity * (244 - 15));
+              g = Math.round(23 + intensity * (63 - 23));
+              b = Math.round(42 + intensity * (94 - 42));
+              alpha = 0.25 + intensity * 0.55;
+            }
+            ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            ctx.fillRect(gx * cellW, gy * cellH, cellW + 1, cellH + 1);
+
+            if (Math.abs(prob - AppState.threshold) < 0.022) {
+              ctx.fillStyle = 'rgba(251, 191, 36, 0.85)';
+              ctx.fillRect(gx * cellW, gy * cellH, cellW + 1, cellH + 1);
+            }
+          }
+        }
+      }
+
+      // Subtle coordinate grid lines
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+      ctx.lineWidth = 1;
+      for (let i = 1; i < 4; i++) {
+        ctx.beginPath();
+        ctx.moveTo((width / 4) * i, 0);
+        ctx.lineTo((width / 4) * i, height);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, (height / 4) * i);
+        ctx.lineTo(width, (height / 4) * i);
+        ctx.stroke();
+      }
+
+      // Plot up to 320 student points for visual clarity
+      const samplePoints = data.slice(0, 320);
+      samplePoints.forEach((row) => {
+        const vx = Number(row[colX]);
+        const vy = Number(row[colY]);
+        if (isNaN(vx) || isNaN(vy)) return;
+
+        const cx = ((vx - x0) / (x1 - x0)) * width;
+        const cy = height - ((vy - y0) / (y1 - y0)) * height;
+        const isPass = String(row[targetCol] ?? '').trim() === posVal;
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, 4.2, 0, 2 * Math.PI);
+        ctx.fillStyle = isPass ? '#f43f5e' : '#0ea5e9';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.2;
+        ctx.fill();
+        ctx.stroke();
+      });
+
+      if (!AppState.tfModel) {
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.65)';
+        ctx.fillRect(width / 2 - 195, height / 2 - 22, 390, 44);
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = '600 12px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Click "Train ANN Model Now" to render neural probability surface', width / 2, height / 2 + 4);
+      }
+
+      document.getElementById('lblBoundaryThresh').textContent = `Boundary (P=${AppState.threshold.toFixed(2)})`;
+
+      // Interactive hover tooltip
+      canvas.onmousemove = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        const valX = x0 + (mx / rect.width) * (x1 - x0);
+        const valY = y1 - (my / rect.height) * (y1 - y0);
+
+        let probStr = 'Untrained';
+        if (AppState.tfModel && AppState.preprocessor) {
+          const baseRow = {};
+          AppState.preprocessor.selectedFeatures.forEach((f) => {
+            if (AppState.preprocessor.numStats[f]) baseRow[f] = AppState.preprocessor.numStats[f].mean;
+            else if (AppState.preprocessor.catStats[f]) baseRow[f] = AppState.preprocessor.catStats[f].mode;
+          });
+          baseRow[colX] = valX;
+          baseRow[colY] = valY;
+          const vec = transformRowWithPreprocessor(baseRow, AppState.preprocessor);
+          const p = tf.tidy(() => AppState.tfModel.predict(tf.tensor2d([vec], [1, vec.length])).dataSync()[0]);
+          probStr = `${(p * 100).toFixed(1)}%`;
+        }
+
+        const tooltip = document.getElementById('canvasTooltip');
+        tooltip.style.left = `${Math.min(rect.width - 155, mx + 12)}px`;
+        tooltip.style.top = `${Math.max(10, my - 50)}px`;
+        tooltip.innerHTML = `<div>${colX}: <b>${valX.toFixed(1)}</b></div><div>${colY}: <b>${valY.toFixed(1)}</b></div><div class="text-amber-400">P(Pass): <b>${probStr}</b></div>`;
+        tooltip.classList.remove('hidden');
+      };
+
+      canvas.onmouseleave = () => {
+        document.getElementById('canvasTooltip').classList.add('hidden');
+      };
+    }
+
+    // =========================================================================
+    // 7. 10 INTERACTIVE DATASET EXPLORATION CHARTS (CHART.JS)
+    // =========================================================================
+    function createOrUpdateChart(id, config) {
+      const ctx = document.getElementById(id);
+      if (!ctx) return;
+      if (AppState.charts[id]) AppState.charts[id].destroy();
+      AppState.charts[id] = new Chart(ctx, config);
+    }
+
+    function buildHistogram(values, min, max, binCount) {
+      const step = (max - min) / binCount;
+      const counts = new Array(binCount).fill(0);
+      const labels = [];
+      for (let i = 0; i < binCount; i++) {
+        labels.push(`${(min + i * step).toFixed(0)}–${(min + (i + 1) * step).toFixed(0)}`);
+      }
+      values.forEach((v) => {
+        if (v === null || v === undefined || isNaN(v)) return;
+        let idx = Math.floor((v - min) / step);
+        if (idx < 0) idx = 0;
+        if (idx >= binCount) idx = binCount - 1;
+        counts[idx]++;
+      });
+      return { labels, counts };
+    }
+
+    function updateExplorationCharts() {
+      const data = AppState.activeDataset;
+      if (!data || data.length === 0) return;
+
+      const targetCol = AppState.targetColumn;
+      const posVal = String(AppState.positiveClass);
+      const isPassRow = (r) => String(r[targetCol] ?? '').trim() === posVal;
+
+      let passCount = 0, failCount = 0;
+      data.forEach((r) => { if (isPassRow(r)) passCount++; else failCount++; });
+
+      const compactOpts = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { ticks: { font: { size: 9 } } }, y: { ticks: { font: { size: 9 } } } }
+      };
+
+      // 1. Pass vs Fail
+      createOrUpdateChart('chartPassFail', {
+        type: 'doughnut',
+        data: {
+          labels: ['Pass (1)', 'Fail (0)'],
+          datasets: [{ data: [passCount, failCount], backgroundColor: ['#f43f5e', '#0ea5e9'], borderWidth: 2 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } } }
+      });
+
+      const getNumCol = (pref, fb = 0) => {
+        const col = AppState.columns.includes(pref) ? pref : (AppState.numericalFeatures[fb] || AppState.columns[0]);
+        return { col, vals: data.map((r) => Number(r[col])).filter((v) => !isNaN(v)) };
+      };
+
+      // 2. Attendance
+      const att = getNumCol('Attendance', 0);
+      const hAtt = buildHistogram(att.vals, 40, 100, 6);
+      createOrUpdateChart('chartAttendanceDist', {
+        type: 'bar',
+        data: { labels: hAtt.labels, datasets: [{ data: hAtt.counts, backgroundColor: '#6366f1', borderRadius: 4 }] },
+        options: compactOpts
+      });
+
+      // 3. Study Hours
+      const stdy = getNumCol('Study_Hours', 1);
+      const hStdy = buildHistogram(stdy.vals, 0, 10, 5);
+      createOrUpdateChart('chartStudyHoursDist', {
+        type: 'bar',
+        data: { labels: hStdy.labels, datasets: [{ data: hStdy.counts, backgroundColor: '#0ea5e9', borderRadius: 4 }] },
+        options: compactOpts
+      });
+
+      // 4. Previous Score
+      const prev = getNumCol('Previous_Score', 2);
+      const hPrev = buildHistogram(prev.vals, 0, 100, 5);
+      createOrUpdateChart('chartPrevScoreDist', {
+        type: 'bar',
+        data: { labels: hPrev.labels, datasets: [{ data: hPrev.counts, backgroundColor: '#8b5cf6', borderRadius: 4 }] },
+        options: compactOpts
+      });
+
+      // 5. Assignment Score
+      const asgn = getNumCol('Assignment_Score', 3);
+      const hAsgn = buildHistogram(asgn.vals, 0, 100, 5);
+      createOrUpdateChart('chartAssignScoreDist', {
+        type: 'bar',
+        data: { labels: hAsgn.labels, datasets: [{ data: hAsgn.counts, backgroundColor: '#f59e0b', borderRadius: 4 }] },
+        options: compactOpts
+      });
+
+      // 6. Final Score
+      const fin = getNumCol('Final_Score', 0);
+      const hFin = buildHistogram(fin.vals, 0, 100, 5);
+      createOrUpdateChart('chartFinalScoreDist', {
+        type: 'bar',
+        data: { labels: hFin.labels, datasets: [{ data: hFin.counts, backgroundColor: '#10b981', borderRadius: 4 }] },
+        options: compactOpts
+      });
+
+      const groupedOpts = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } } },
+        scales: { x: { ticks: { font: { size: 9 } } }, y: { ticks: { font: { size: 9 } } } }
+      };
+
+      // 7. Performance by Gender
+      const gCol = AppState.columns.includes('Gender') ? 'Gender' : (AppState.categoricalFeatures[0] || AppState.columns[0]);
+      const gMap = {};
+      data.forEach((r) => {
+        const k = String(r[gCol] ?? 'Other');
+        if (!gMap[k]) gMap[k] = { p: 0, f: 0 };
+        if (isPassRow(r)) gMap[k].p++; else gMap[k].f++;
+      });
+      const gKeys = Object.keys(gMap).slice(0, 4);
+      createOrUpdateChart('chartPerfGender', {
+        type: 'bar',
+        data: {
+          labels: gKeys,
+          datasets: [
+            { label: 'Pass', data: gKeys.map((k) => gMap[k].p), backgroundColor: '#f43f5e', borderRadius: 4 },
+            { label: 'Fail', data: gKeys.map((k) => gMap[k].f), backgroundColor: '#0ea5e9', borderRadius: 4 }
+          ]
+        },
+        options: groupedOpts
+      });
+
+      // 8. Performance by Attendance Group
+      const aBuckets = { '<60%': { p: 0, f: 0 }, '60-80%': { p: 0, f: 0 }, '>80%': { p: 0, f: 0 } };
+      data.forEach((r) => {
+        const v = Number(r[att.col]);
+        const b = v < 60 ? '<60%' : v <= 80 ? '60-80%' : '>80%';
+        if (isPassRow(r)) aBuckets[b].p++; else aBuckets[b].f++;
+      });
+      const aKeys = Object.keys(aBuckets);
+      createOrUpdateChart('chartPerfAttendanceGroup', {
+        type: 'bar',
+        data: {
+          labels: aKeys,
+          datasets: [
+            { label: 'Pass', data: aKeys.map((k) => aBuckets[k].p), backgroundColor: '#f43f5e', borderRadius: 4 },
+            { label: 'Fail', data: aKeys.map((k) => aBuckets[k].f), backgroundColor: '#0ea5e9', borderRadius: 4 }
+          ]
+        },
+        options: groupedOpts
+      });
+
+      // 9. Performance by Study-Hour Group
+      const sBuckets = { '<2h': { p: 0, f: 0 }, '2-4h': { p: 0, f: 0 }, '4-6h': { p: 0, f: 0 }, '>6h': { p: 0, f: 0 } };
+      data.forEach((r) => {
+        const v = Number(r[stdy.col]);
+        const b = v < 2 ? '<2h' : v <= 4 ? '2-4h' : v <= 6 ? '4-6h' : '>6h';
+        if (isPassRow(r)) sBuckets[b].p++; else sBuckets[b].f++;
+      });
+      const sKeys = Object.keys(sBuckets);
+      createOrUpdateChart('chartPerfStudyGroup', {
+        type: 'bar',
+        data: {
+          labels: sKeys,
+          datasets: [
+            { label: 'Pass', data: sKeys.map((k) => sBuckets[k].p), backgroundColor: '#f43f5e', borderRadius: 4 },
+            { label: 'Fail', data: sKeys.map((k) => sBuckets[k].f), backgroundColor: '#0ea5e9', borderRadius: 4 }
+          ]
+        },
+        options: groupedOpts
+      });
+
+      // 10. Performance by Extracurricular
+      const exCol = AppState.columns.includes('Extracurricular') ? 'Extracurricular' : (AppState.categoricalFeatures[1] || AppState.columns[0]);
+      const exMap = {};
+      data.forEach((r) => {
+        const k = String(r[exCol] ?? 'No');
+        if (!exMap[k]) exMap[k] = { p: 0, f: 0 };
+        if (isPassRow(r)) exMap[k].p++; else exMap[k].f++;
+      });
+      const exKeys = Object.keys(exMap).slice(0, 4);
+      createOrUpdateChart('chartPerfExtra', {
+        type: 'bar',
+        data: {
+          labels: exKeys,
+          datasets: [
+            { label: 'Pass', data: exKeys.map((k) => exMap[k].p), backgroundColor: '#f43f5e', borderRadius: 4 },
+            { label: 'Fail', data: exKeys.map((k) => exMap[k].f), backgroundColor: '#0ea5e9', borderRadius: 4 }
+          ]
+        },
+        options: groupedOpts
+      });
+    }
+
+    // =========================================================================
+    // 8. ZERO-LEAKAGE PREPROCESSING & TENSORFLOW.JS ANN TRAINING
+    // =========================================================================
+    function fitPreprocessorOnTrain(trainRows, selectedFeatures, numFeatures, catFeatures) {
+      const numStats = {};
+      const catStats = {};
+      const encodedFeatureNames = [];
+
+      selectedFeatures.forEach((col) => {
+        if (numFeatures.includes(col)) {
+          const validNums = trainRows.map((r) => Number(r[col])).filter((v) => !isNaN(v) && isFinite(v));
+          const mean = validNums.length > 0 ? validNums.reduce((a, b) => a + b, 0) / validNums.length : 0;
+          const variance = validNums.length > 0 ? validNums.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / validNums.length : 1;
+          const std = Math.sqrt(variance) || 1;
+          numStats[col] = { mean, std };
+          encodedFeatureNames.push(col);
+        } else if (catFeatures.includes(col)) {
+          const counts = {};
+          trainRows.forEach((r) => {
+            const raw = r[col];
+            if (raw !== null && raw !== undefined && String(raw).trim() !== '') {
+              const s = String(raw).trim();
+              counts[s] = (counts[s] || 0) + 1;
+            }
+          });
+          const sortedCats = Object.entries(counts).sort((a, b) => b[1] - a[1]).map((e) => e[0]);
+          const mode = sortedCats[0] || 'Unknown';
+          const categories = sortedCats.length > 0 ? sortedCats.slice(0, 12) : ['Unknown'];
+          catStats[col] = { mode, categories };
+          categories.forEach((cat) => encodedFeatureNames.push(`${col}_${cat}`));
+        }
+      });
+
+      return {
+        selectedFeatures: [...selectedFeatures],
+        numFeatures: [...numFeatures],
+        catFeatures: [...catFeatures],
+        numStats,
+        catStats,
+        encodedFeatureNames,
+        inputDimension: encodedFeatureNames.length
+      };
+    }
+
+    function transformRowWithPreprocessor(row, prep) {
+      const vec = [];
+      prep.selectedFeatures.forEach((col) => {
+        if (prep.numStats[col]) {
+          const { mean, std } = prep.numStats[col];
+          const raw = Number(row[col]);
+          const imputed = isNaN(raw) || !isFinite(raw) ? mean : raw;
+          vec.push((imputed - mean) / std);
+        } else if (prep.catStats[col]) {
+          const { mode, categories } = prep.catStats[col];
+          const raw = row[col];
+          const val = raw === null || raw === undefined || String(raw).trim() === '' ? mode : String(raw).trim();
+          categories.forEach((cat) => vec.push(val === cat ? 1.0 : 0.0));
+        }
+      });
+      return vec;
+    }
+
+    async function trainNeuralNetwork() {
+      if (AppState.isTraining) return;
+
+      const dataset = AppState.activeDataset;
+      if (!dataset || dataset.length < 20) {
+        showToast('Dataset must contain at least 20 valid student records.', 'error');
+        return;
+      }
+
+      const targetCol = AppState.targetColumn;
+      const posClass = String(AppState.positiveClass).trim();
+      const negClass = String(AppState.negativeClass).trim();
+
+      if (posClass === negClass) {
+        showToast('Positive and Negative target classes must be distinct.', 'error');
+        return;
+      }
+
+      const inputFeatures = AppState.selectedFeatures.filter((f) => f !== targetCol);
+      if (inputFeatures.length === 0) {
+        showToast('Please select at least one input feature.', 'error');
+        return;
+      }
+
+      const validRows = dataset.filter((r) => {
+        const t = String(r[targetCol] ?? '').trim();
+        return t === posClass || t === negClass;
+      });
+
+      if (validRows.length < 20) {
+        showToast(`Insufficient records matching "${posClass}" and "${negClass}".`, 'error');
+        return;
+      }
+
+      const posCount = validRows.filter((r) => String(r[targetCol]).trim() === posClass).length;
+      if (posCount === 0 || posCount === validRows.length) {
+        showToast('Dataset contains only one target class. Both Pass and Fail records are required.', 'error');
+        return;
+      }
+
+      const hidden1 = parseInt(document.getElementById('cfgHidden1Input').value, 10) || 16;
+      const hidden2Val = document.getElementById('cfgUseHidden2Select').value;
+      const hidden2 = hidden2Val === 'none' ? 0 : parseInt(hidden2Val, 10) || 0;
+      const epochs = parseInt(document.getElementById('cfgEpochsInput').value, 10) || 50;
+      const batchSize = parseInt(document.getElementById('cfgBatchSizeSelect').value, 10) || 32;
+      const learningRate = parseFloat(document.getElementById('cfgLearningRateSelect').value) || 0.001;
+      const trainSplit = parseFloat(document.getElementById('cfgTrainSplitSelect').value) || 0.80;
+
+      AppState.modelConfig = { hidden1, hidden2, epochs, batchSize, learningRate, trainSplit };
+
+      // Seeded shuffle & split
+      const rng = createSeededRandom(AppState.seed);
+      const shuffled = [...validRows];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+
+      const trainSize = Math.max(10, Math.floor(shuffled.length * trainSplit));
+      const trainRows = shuffled.slice(0, trainSize);
+      const testRows = shuffled.slice(trainSize);
+
+      // Fit preprocessing strictly on Training Split
+      const preprocessor = fitPreprocessorOnTrain(
+        trainRows,
+        inputFeatures,
+        AppState.numericalFeatures,
+        AppState.categoricalFeatures
+      );
+      AppState.preprocessor = preprocessor;
+
+      const xTrainArr = trainRows.map((r) => transformRowWithPreprocessor(r, preprocessor));
+      const yTrainArr = trainRows.map((r) => (String(r[targetCol]).trim() === posClass ? 1 : 0));
+
+      const xTestArr = testRows.map((r) => transformRowWithPreprocessor(r, preprocessor));
+      const yTestArr = testRows.map((r) => (String(r[targetCol]).trim() === posClass ? 1 : 0));
+
+      if (AppState.tfModel) AppState.tfModel.dispose();
+
+      const model = tf.sequential();
+      model.add(tf.layers.dense({
+        inputShape: [preprocessor.inputDimension],
+        units: hidden1,
+        activation: 'relu',
+        kernelInitializer: tf.initializers.glorotUniform({ seed: AppState.seed })
+      }));
+
+      if (hidden2 > 0) {
+        model.add(tf.layers.dense({
+          units: hidden2,
+          activation: 'relu',
+          kernelInitializer: tf.initializers.glorotUniform({ seed: AppState.seed + 1 })
+        }));
+      }
+
+      model.add(tf.layers.dense({
+        units: 1,
+        activation: 'sigmoid',
+        kernelInitializer: tf.initializers.glorotUniform({ seed: AppState.seed + 2 })
+      }));
+
+      model.compile({
+        optimizer: tf.train.adam(learningRate),
+        loss: 'binaryCrossentropy',
+        metrics: ['accuracy']
+      });
+
+      AppState.tfModel = model;
+      renderAnnArchitectureDiagram();
+
+      AppState.isTraining = true;
+      AppState.stopRequested = false;
+      AppState.trainingHistory = { epochs: [], loss: [], val_loss: [], acc: [], val_acc: [] };
+
+      document.getElementById('trainModelBtn').disabled = true;
+      document.getElementById('stopTrainingBtn').disabled = false;
+      document.getElementById('trainingIndicator').classList.remove('hidden');
+      document.getElementById('trainingIndicator').classList.add('inline-flex');
+      document.getElementById('trainingStatusText').textContent = 'Training ANN via Backpropagation (Adam)...';
+
+      initTrainingCharts();
+
+      const xTrainTensor = tf.tensor2d(xTrainArr, [xTrainArr.length, preprocessor.inputDimension]);
+      const yTrainTensor = tf.tensor2d(yTrainArr, [yTrainArr.length, 1]);
+
+      try {
+        await model.fit(xTrainTensor, yTrainTensor, {
+          epochs,
+          batchSize,
+          validationSplit: 0.2,
+          shuffle: true,
+          callbacks: {
+            onEpochEnd: async (epoch, logs) => {
+              const epNum = epoch + 1;
+              const trLoss = Number(logs.loss.toFixed(4));
+              const vlLoss = Number((logs.val_loss ?? logs.loss).toFixed(4));
+              const trAcc = Number((logs.acc ?? logs.accuracy ?? 0).toFixed(4));
+              const vlAcc = Number((logs.val_acc ?? logs.val_accuracy ?? trAcc).toFixed(4));
+
+              AppState.trainingHistory.epochs.push(`Ep ${epNum}`);
+              AppState.trainingHistory.loss.push(trLoss);
+              AppState.trainingHistory.val_loss.push(vlLoss);
+              AppState.trainingHistory.acc.push(trAcc);
+              AppState.trainingHistory.val_acc.push(vlAcc);
+
+              const pct = Math.round((epNum / epochs) * 100);
+              document.getElementById('liveEpochSpan').textContent = `Ep ${epNum}/${epochs}`;
+              document.getElementById('trainingProgressBar').style.width = `${pct}%`;
+              document.getElementById('liveTrainLoss').textContent = trLoss.toFixed(3);
+              document.getElementById('liveValLoss').textContent = vlLoss.toFixed(3);
+              document.getElementById('liveTrainAcc').textContent = formatPct(trAcc);
+              document.getElementById('liveValAcc').textContent = formatPct(vlAcc);
+
+              updateTrainingHistoryCharts();
+
+              if (AppState.stopRequested) model.stopTraining = true;
+              await tf.nextFrame();
+            }
+          }
+        });
+
+        // Held-Out Test Set Evaluation
+        const xTestTensor = tf.tensor2d(xTestArr, [xTestArr.length, preprocessor.inputDimension]);
+        const predTensor = model.predict(xTestTensor);
+        const yProb = Array.from(await predTensor.data());
+        xTestTensor.dispose();
+        predTensor.dispose();
+
+        const { rocPoints, auc } = computeRocAndAuc(yTestArr, yProb);
+        const featureSensitivity = await computeFeatureSensitivity(model, testRows, preprocessor, yProb);
+
+        const histLen = AppState.trainingHistory.acc.length;
+        const finalTrainAcc = histLen > 0 ? AppState.trainingHistory.acc[histLen - 1] : 0;
+        const finalValAcc = histLen > 0 ? AppState.trainingHistory.val_acc[histLen - 1] : 0;
+
+        AppState.testEvaluation = {
+          yTrue: yTestArr,
+          yProb,
+          studentIds: testRows.map((r, idx) => r.Student_ID || `TEST-${idx + 1}`),
+          rawRows: testRows,
+          rocPoints,
+          auc,
+          trainCount: trainRows.length,
+          testCount: testRows.length,
+          finalTrainAcc,
+          finalValAcc,
+          featureSensitivity
+        };
+
+        updateEvaluationMetricsAndCharts();
+        renderDecisionBoundaryCanvas();
+        runIndividualStudentPrediction();
+
+        document.getElementById('trainingStatusText').textContent = `Trained & Verified on ${testRows.length} Test Students`;
+        document.getElementById('overviewModelStatusTag').textContent = 'MODEL: TRAINED (TF.JS ANN)';
+        document.getElementById('overviewModelStatusTag').className = 'px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
+
+        showToast('Neural network trained and evaluated on held-out test set!', 'success');
+      } catch (err) {
+        console.error(err);
+        showToast(`Training error: ${err.message}`, 'error');
+      } finally {
+        xTrainTensor.dispose();
+        yTrainTensor.dispose();
+        AppState.isTraining = false;
+        document.getElementById('trainModelBtn').disabled = false;
+        document.getElementById('stopTrainingBtn').disabled = true;
+        document.getElementById('trainingIndicator').classList.add('hidden');
+        document.getElementById('trainingIndicator').classList.remove('inline-flex');
+      }
+    }
+
+    // =========================================================================
+    // 9. EVALUATION METRICS, ROC CURVE, CONFUSION MATRIX & SENSITIVITY CHARTS
+    // =========================================================================
+    function initTrainingCharts() {
+      const baseLineOpts = {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: { legend: { display: false } },
+        scales: { x: { ticks: { maxTicksLimit: 6, font: { size: 9 } } }, y: { ticks: { font: { size: 9 } } } }
+      };
+      createOrUpdateChart('chartTrainLoss', {
+        type: 'line',
+        data: { labels: [], datasets: [{ data: [], borderColor: '#f43f5e', backgroundColor: 'rgba(244,63,94,0.1)', fill: true, tension: 0.25, pointRadius: 0 }] },
+        options: baseLineOpts
+      });
+      createOrUpdateChart('chartValLoss', {
+        type: 'line',
+        data: { labels: [], datasets: [{ data: [], borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', fill: true, tension: 0.25, pointRadius: 0 }] },
+        options: baseLineOpts
+      });
+      createOrUpdateChart('chartTrainAcc', {
+        type: 'line',
+        data: { labels: [], datasets: [{ data: [], borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.25, pointRadius: 0 }] },
+        options: { ...baseLineOpts, scales: { ...baseLineOpts.scales, y: { min: 0, max: 1 } } }
+      });
+      createOrUpdateChart('chartValAcc', {
+        type: 'line',
+        data: { labels: [], datasets: [{ data: [], borderColor: '#0ea5e9', backgroundColor: 'rgba(14,165,233,0.1)', fill: true, tension: 0.25, pointRadius: 0 }] },
+        options: { ...baseLineOpts, scales: { ...baseLineOpts.scales, y: { min: 0, max: 1 } } }
+      });
+    }
+
+    function updateTrainingHistoryCharts() {
+      const h = AppState.trainingHistory;
+      const sync = (id, arr) => {
+        const ch = AppState.charts[id];
+        if (!ch) return;
+        ch.data.labels = h.epochs;
+        ch.data.datasets[0].data = arr;
+        ch.update('none');
+      };
+      sync('chartTrainLoss', h.loss);
+      sync('chartValLoss', h.val_loss);
+      sync('chartTrainAcc', h.acc);
+      sync('chartValAcc', h.val_acc);
+    }
+
+    function computeRocAndAuc(yTrue, yProb) {
+      const thresholds = [];
+      for (let t = 1.0; t >= 0.0; t -= 0.02) thresholds.push(Number(t.toFixed(2)));
+      const totalPos = yTrue.filter((y) => y === 1).length || 1;
+      const totalNeg = yTrue.filter((y) => y === 0).length || 1;
+
+      const rocPoints = thresholds.map((thresh) => {
+        let tp = 0, fp = 0;
+        for (let i = 0; i < yTrue.length; i++) {
+          const pred = yProb[i] >= thresh ? 1 : 0;
+          if (pred === 1 && yTrue[i] === 1) tp++;
+          if (pred === 1 && yTrue[i] === 0) fp++;
+        }
+        return { x: fp / totalNeg, y: tp / totalPos };
+      });
+      rocPoints.sort((a, b) => a.x - b.x || a.y - b.y);
+
+      let auc = 0;
+      for (let i = 1; i < rocPoints.length; i++) {
+        auc += (rocPoints[i].x - rocPoints[i - 1].x) * ((rocPoints[i].y + rocPoints[i - 1].y) / 2);
+      }
+      return { rocPoints, auc: clamp(auc, 0, 1) };
+    }
+
+    async function computeFeatureSensitivity(model, testRows, prep, baselineProbs) {
+      const results = [];
+      const rng = createSeededRandom(AppState.seed + 99);
+
+      for (const feat of prep.selectedFeatures) {
+        const permutedVals = testRows.map((r) => r[feat]);
+        for (let i = permutedVals.length - 1; i > 0; i--) {
+          const j = Math.floor(rng() * (i + 1));
+          [permutedVals[i], permutedVals[j]] = [permutedVals[j], permutedVals[i]];
+        }
+        const perturbedRows = testRows.map((r, idx) => ({ ...r, [feat]: permutedVals[idx] }));
+        const xPert = perturbedRows.map((r) => transformRowWithPreprocessor(r, prep));
+        const tPert = tf.tensor2d(xPert, [xPert.length, prep.inputDimension]);
+        const pTensor = model.predict(tPert);
+        const pData = await pTensor.data();
+        tPert.dispose();
+        pTensor.dispose();
+
+        let sumShift = 0;
+        for (let i = 0; i < baselineProbs.length; i++) sumShift += Math.abs(baselineProbs[i] - pData[i]);
+        results.push({ feature: feat, shift: sumShift / baselineProbs.length });
+      }
+      results.sort((a, b) => b.shift - a.shift);
+      return results;
+    }
+
+    function computeThresholdMetrics(yTrue, yProb, threshold) {
+      let tp = 0, fp = 0, fn = 0, tn = 0;
+      let actualPass = 0, actualFail = 0, predPass = 0, predFail = 0;
+
+      for (let i = 0; i < yTrue.length; i++) {
+        const actual = yTrue[i];
+        const pred = yProb[i] >= threshold ? 1 : 0;
+        if (actual === 1) actualPass++; else actualFail++;
+        if (pred === 1) predPass++; else predFail++;
+
+        if (actual === 1 && pred === 1) tp++;
+        else if (actual === 0 && pred === 1) fp++;
+        else if (actual === 1 && pred === 0) fn++;
+        else tn++;
+      }
+
+      const total = yTrue.length || 1;
+      const accuracy = (tp + tn) / total;
+      const precision = tp + fp > 0 ? tp / (tp + fp) : 0;
+      const recall = tp + fn > 0 ? tp / (tp + fn) : 0;
+      const f1 = precision + recall > 0 ? (2 * precision * recall) / (precision + recall) : 0;
+
+      return { tp, fp, fn, tn, actualPass, actualFail, predPass, predFail, accuracy, precision, recall, f1 };
+    }
+
+    function updateEvaluationMetricsAndCharts() {
+      const ev = AppState.testEvaluation;
+      if (!ev) return;
+
+      const thresh = AppState.threshold;
+      const m = computeThresholdMetrics(ev.yTrue, ev.yProb, thresh);
+
+      // Update Step 3 Scorecard
+      document.getElementById('metricAccuracy').textContent = formatPct(m.accuracy);
+      document.getElementById('metricAccuracySub').textContent = `Tr: ${formatPct(ev.finalTrainAcc)} | Val: ${formatPct(ev.finalValAcc)}`;
+      document.getElementById('metricPrecision').textContent = m.precision.toFixed(3);
+      document.getElementById('metricRecall').textContent = m.recall.toFixed(3);
+      document.getElementById('metricF1').textContent = m.f1.toFixed(3);
+      document.getElementById('metricAuc').textContent = ev.auc.toFixed(3);
+      document.getElementById('metricSplitSub').textContent = `Train: ${ev.trainCount} | Test: ${ev.testCount}`;
+      document.getElementById('step3Status').textContent = `Test Acc: ${formatPct(m.accuracy)} (AUC: ${ev.auc.toFixed(2)})`;
+
+      // Update Confusion Matrix Cells
+      document.getElementById('evalTrainCount').textContent = ev.trainCount;
+      document.getElementById('evalTestCount').textContent = ev.testCount;
+      document.getElementById('evalActualPassFail').textContent = `${m.actualPass} / ${m.actualFail}`;
+      document.getElementById('evalPredPassFail').textContent = `${m.predPass} / ${m.predFail}`;
+      document.getElementById('valTN').textContent = m.tn;
+      document.getElementById('valFP').textContent = m.fp;
+      document.getElementById('valFN').textContent = m.fn;
+      document.getElementById('valTP').textContent = m.tp;
+
+      // 5. Confusion Matrix Bar Chart
+      createOrUpdateChart('chartConfusionMatrix', {
+        type: 'bar',
+        data: {
+          labels: ['TN (Fail)', 'FP (Type I)', 'FN (Type II)', 'TP (Pass)'],
+          datasets: [{
+            label: `Test Count (@ τ=${thresh.toFixed(2)})`,
+            data: [m.tn, m.fp, m.fn, m.tp],
+            backgroundColor: ['#10b981', '#f59e0b', '#f43f5e', '#6366f1'],
+            borderRadius: 6
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+
+      // 6. ROC Curve Chart
+      createOrUpdateChart('chartRocCurve', {
+        type: 'line',
+        data: {
+          datasets: [
+            {
+              label: `ANN ROC (AUC = ${ev.auc.toFixed(3)})`,
+              data: ev.rocPoints.map((p) => ({ x: Number(p.x.toFixed(3)), y: Number(p.y.toFixed(3)) })),
+              borderColor: '#8b5cf6',
+              backgroundColor: 'rgba(139, 92, 246, 0.15)',
+              fill: true,
+              tension: 0.15,
+              pointRadius: 2
+            },
+            {
+              label: 'Random Guess (AUC = 0.500)',
+              data: [{ x: 0, y: 0 }, { x: 1, y: 1 }],
+              borderColor: '#94a3b8',
+              borderDash: [5, 5],
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { type: 'linear', min: 0, max: 1, title: { display: true, text: 'False Positive Rate' } },
+            y: { type: 'linear', min: 0, max: 1, title: { display: true, text: 'True Positive Rate' } }
+          }
+        }
+      });
+
+      // 7. Actual vs Predicted Chart
+      createOrUpdateChart('chartActualVsPred', {
+        type: 'bar',
+        data: {
+          labels: ['Pass (1)', 'Fail (0)'],
+          datasets: [
+            { label: 'Actual Test', data: [m.actualPass, m.actualFail], backgroundColor: '#10b981', borderRadius: 5 },
+            { label: 'Predicted Test', data: [m.predPass, m.predFail], backgroundColor: '#6366f1', borderRadius: 5 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      // 8. Predicted Probability Distribution Chart
+      const pHist = buildHistogram(ev.yProb.map((p) => p * 100), 0, 100, 10);
+      createOrUpdateChart('chartProbDist', {
+        type: 'bar',
+        data: {
+          labels: pHist.labels.map((l) => `${l}%`),
+          datasets: [{ label: 'Test Students', data: pHist.counts, backgroundColor: '#8b5cf6', borderRadius: 5 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+
+      // Feature Sensitivity Chart
+      createOrUpdateChart('weightsChart', {
+        type: 'bar',
+        data: {
+          labels: ev.featureSensitivity.map((f) => f.feature),
+          datasets: [{
+            label: 'Mean |ΔP(Pass)| under Permutation',
+            data: ev.featureSensitivity.map((f) => Number(f.shift.toFixed(4))),
+            backgroundColor: 'rgba(99, 102, 241, 0.75)',
+            borderColor: '#4f46e5',
+            borderWidth: 1,
+            borderRadius: 5
+          }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y' }
+      });
+
+      // Update Academic Documentation Live Telemetry Box
+      document.getElementById('docLiveResultsBox').textContent =
+        `Live Held-Out Test Evaluation (@ τ=${thresh.toFixed(2)}): Train Acc=${formatPct(ev.finalTrainAcc)} | Val Acc=${formatPct(ev.finalValAcc)} | Test Acc=${formatPct(m.accuracy)} | Precision=${m.precision.toFixed(3)} | Recall=${m.recall.toFixed(3)} | F1=${m.f1.toFixed(3)} | ROC-AUC=${ev.auc.toFixed(3)} (TP=${m.tp}, FP=${m.fp}, FN=${m.fn}, TN=${m.tn})`;
+    }
+
+    // =========================================================================
+    // 10. ANN ARCHITECTURE TOPOLOGY SVG DIAGRAM
+    // =========================================================================
+    function renderAnnArchitectureDiagram() {
+      const h1 = parseInt(document.getElementById('cfgHidden1Input')?.value || 16, 10);
+      const h2Val = document.getElementById('cfgUseHidden2Select')?.value || 'none';
+      const h2 = h2Val === 'none' ? 0 : parseInt(h2Val, 10);
+      const lr = document.getElementById('cfgLearningRateSelect')?.value || '0.001';
+      const ep = document.getElementById('cfgEpochsInput')?.value || '50';
+
+      const inputDim = AppState.preprocessor
+        ? AppState.preprocessor.inputDimension
+        : Math.max(1, AppState.selectedFeatures.length);
+
+      document.getElementById('step2Status').textContent = h2 > 0
+        ? `Dense(${h1}) → Dense(${h2}) → Sigmoid(1)`
+        : `Dense(${h1}, ReLU) → Sigmoid(1)`;
+      document.getElementById('interpInputDim').textContent = `${inputDim} Units (${AppState.selectedFeatures.length} Feats)`;
+      document.getElementById('interpHiddenConfig').textContent = h2 > 0 ? `${h1} ReLU → ${h2} ReLU` : `${h1} ReLU Units`;
+      document.getElementById('interpOptimizer').textContent = `Adam (LR=${lr}, Ep=${ep})`;
+
+      const paramCount = h2 > 0
+        ? (inputDim * h1 + h1) + (h1 * h2 + h2) + (h2 * 1 + 1)
+        : (inputDim * h1 + h1) + (h1 * 1 + 1);
+      document.getElementById('interpParamCount').textContent = `${paramCount.toLocaleString()} params`;
+
+      const container = document.getElementById('annSvgContainer');
+      if (!container) return;
+
+      const layers = [
+        { name: `Input (${inputDim})`, count: Math.min(7, inputDim), color: '#38bdf8' },
+        { name: `Hidden 1 (${h1} ReLU)`, count: Math.min(7, h1), color: '#818cf8' }
+      ];
+      if (h2 > 0) layers.push({ name: `Hidden 2 (${h2} ReLU)`, count: Math.min(7, h2), color: '#a78bfa' });
+      layers.push({ name: 'Output (1 Sigmoid)', count: 1, color: '#34d399' });
+
+      const width = 620, height = 190;
+      const xStep = width / (layers.length + 1);
+      let linesSvg = '', nodesSvg = '';
+
+      const layerCoords = layers.map((layer, lIdx) => {
+        const x = (lIdx + 1) * xStep;
+        const coords = [];
+        for (let i = 0; i < layer.count; i++) {
+          const y = layer.count === 1 ? 105 : 40 + (i * 125) / (layer.count - 1);
+          coords.push({ x, y });
+        }
+        return { ...layer, x, coords };
+      });
+
+      for (let l = 0; l < layerCoords.length - 1; l++) {
+        layerCoords[l].coords.forEach((c1) => {
+          layerCoords[l + 1].coords.forEach((c2) => {
+            linesSvg += `<line x1="${c1.x}" y1="${c1.y}" x2="${c2.x}" y2="${c2.y}" stroke="#334155" stroke-width="1" opacity="0.65" />`;
+          });
+        });
+      }
+
+      layerCoords.forEach((layer) => {
+        nodesSvg += `<text x="${layer.x}" y="20" text-anchor="middle" fill="#cbd5e1" font-size="11" font-family="Inter, sans-serif" font-weight="600">${layer.name}</text>`;
+        layer.coords.forEach((c) => {
+          nodesSvg += `<circle cx="${c.x}" cy="${c.y}" r="7" fill="${layer.color}" stroke="#0f172a" stroke-width="2" />`;
+        });
+      });
+
+      container.innerHTML = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" class="max-w-full h-auto">${linesSvg}${nodesSvg}</svg>`;
+    }
+
+    // =========================================================================
+    // 11. INDIVIDUAL STUDENT PREDICTION (STEP 4 PLAYGROUND)
+    // =========================================================================
+    async function runIndividualStudentPrediction(e) {
+      if (e) e.preventDefault();
+
+      if (!AppState.tfModel || !AppState.preprocessor) {
+        if (e) showToast('Train the ANN model first (Step 2) to run student predictions.', 'warning');
+        return;
+      }
+
+      const studentInput = {
+        Age: parseFloat(document.getElementById('predAge').value),
+        Gender: document.getElementById('predGender').value,
+        Attendance: parseFloat(document.getElementById('predAttendance').value),
+        Study_Hours: parseFloat(document.getElementById('predStudyHours').value),
+        Previous_Score: parseFloat(document.getElementById('predPrevScore').value),
+        Assignment_Score: parseFloat(document.getElementById('predAssignScore').value),
+        Participation: parseFloat(document.getElementById('predParticipation').value),
+        Sleep_Hours: parseFloat(document.getElementById('predSleepHours').value),
+        Internet_Access: document.getElementById('predInternet').value,
+        Extracurricular: document.getElementById('predExtra').value
+      };
+
+      const encodedVec = transformRowWithPreprocessor(studentInput, AppState.preprocessor);
+      const passProb = tf.tidy(() => {
+        const t = tf.tensor2d([encodedVec], [1, AppState.preprocessor.inputDimension]);
+        return clamp(AppState.tfModel.predict(t).dataSync()[0], 0, 1);
+      });
+
+      const failProb = 1 - passProb;
+      const thresh = AppState.threshold;
+      const isPass = passProb >= thresh;
+
+      AppState.lastSinglePrediction = {
+        ...studentInput,
+        Probability_Pass: Number(passProb.toFixed(4)),
+        Probability_Fail: Number(failProb.toFixed(4)),
+        Classification_Threshold: thresh,
+        Predicted_Performance: isPass ? 'Pass (1)' : 'Fail (0)'
+      };
+
+      const badge = document.getElementById('predClassBadge');
+      if (isPass) {
+        badge.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-rose-500 text-white';
+        badge.textContent = 'PREDICTED: PASS (1)';
+      } else {
+        badge.className = 'px-2.5 py-1 rounded-full text-xs font-bold bg-sky-500 text-white';
+        badge.textContent = 'PREDICTED: FAIL (0)';
+      }
+
+      document.getElementById('predProbFailText').textContent = `Fail (0): ${(failProb * 100).toFixed(1)}%`;
+      document.getElementById('predProbPassText').textContent = `Pass (1): ${(passProb * 100).toFixed(1)}%`;
+      document.getElementById('predProbBar0').style.width = `${(failProb * 100).toFixed(1)}%`;
+      document.getElementById('predProbBar1').style.width = `${(passProb * 100).toFixed(1)}%`;
+      document.getElementById('predThresholdLabel').textContent = `Threshold: ${thresh.toFixed(2)}`;
+
+      document.getElementById('predInterpretationText').textContent =
+        `ANN Forward Pass Output: ${(passProb * 100).toFixed(1)}% Pass probability vs. decision threshold ${(thresh * 100).toFixed(0)}% (Attendance ${studentInput.Attendance}%, Study ${studentInput.Study_Hours}h/day, Prev ${studentInput.Previous_Score}, Assign ${studentInput.Assignment_Score}). Educational estimate—not a guaranteed outcome.`;
+    }
+
+    // =========================================================================
+    // 12. CSV UPLOAD (PAPAPARSE) & FULL EXPORT SUITE
+    // =========================================================================
+    function handleCsvUpload(file) {
+      const alertBox = document.getElementById('uploadValidationAlert');
+      const showUploadAlert = (msg, isError = true) => {
+        alertBox.className = `p-2.5 rounded-lg text-xs border ${
+          isError ? 'bg-rose-50 border-rose-300 text-rose-800' : 'bg-emerald-50 border-emerald-300 text-emerald-800'
+        }`;
+        alertBox.textContent = msg;
+        alertBox.classList.remove('hidden');
+      };
+
+      if (!file) return;
+      if (!file.name.toLowerCase().endsWith('.csv')) {
+        showUploadAlert('Invalid file format: Please upload a .csv file.', true);
+        showToast('Please select a valid .csv file.', 'error');
+        return;
+      }
+
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const rows = results.data;
+          if (!rows || rows.length === 0) {
+            showUploadAlert('Uploaded CSV is empty. Retaining existing dataset.', true);
+            showToast('Uploaded CSV is empty.', 'error');
+            return;
+          }
+          if (rows.length < 20) {
+            showUploadAlert(`CSV contains only ${rows.length} rows (minimum 20 required).`, true);
+            showToast('Insufficient records in CSV.', 'error');
+            return;
+          }
+          const cols = Object.keys(rows[0] || {});
+          if (cols.length < 2) {
+            showUploadAlert('CSV must contain at least 2 columns.', true);
+            return;
+          }
+
+          AppState.sourceType = 'uploaded';
+          AppState.activeDataset = rows;
+          analyzeDatasetSchema(rows, 'Performance');
+          showUploadAlert(`Loaded "${file.name}" (${rows.length} rows, ${cols.length} cols).`, false);
+          showToast(`Uploaded ${file.name} (${rows.length} rows)`, 'success');
+        },
+        error: (err) => {
+          showUploadAlert(`CSV Parse Error: ${err.message}`, true);
+          showToast('Failed to parse CSV.', 'error');
+        }
+      });
+    }
+
+    function downloadBlob(content, filename, mimeType = 'text/csv;charset=utf-8;') {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function exportDatasetCsv(rows, filename) {
+      if (!rows || rows.length === 0) {
+        showToast('No dataset available to export.', 'warning');
+        return;
+      }
+      downloadBlob(Papa.unparse(rows), filename);
+      showToast(`Exported ${rows.length} rows to ${filename}`, 'success');
+    }
+
+    function exportTestPredictionsCsv() {
+      const ev = AppState.testEvaluation;
+      if (!ev) {
+        showToast('Train the ANN model first before exporting test predictions.', 'warning');
+        return;
+      }
+      const thresh = AppState.threshold;
+      const exportRows = ev.yTrue.map((actual, idx) => {
+        const pPass = ev.yProb[idx];
+        const pred = pPass >= thresh ? 1 : 0;
+        return {
+          Student_ID: ev.studentIds[idx],
+          Actual_Performance: actual,
+          Predicted_Performance: pred,
+          Probability_Pass: Number(pPass.toFixed(4)),
+          Probability_Fail: Number((1 - pPass).toFixed(4)),
+          Classification_Threshold: thresh,
+          Prediction_Correctness: actual === pred ? 'Correct' : 'Incorrect'
+        };
+      });
+      downloadBlob(Papa.unparse(exportRows), `edupredict_test_predictions_${thresh.toFixed(2)}.csv`);
+      showToast(`Exported ${exportRows.length} held-out test predictions!`, 'success');
+    }
+
+    function exportSinglePredictionCsv() {
+      if (!AppState.lastSinglePrediction) {
+        showToast('Run an individual student prediction first before exporting.', 'warning');
+        return;
+      }
+      downloadBlob(Papa.unparse([AppState.lastSinglePrediction]), 'edupredict_student_prediction.csv');
+      showToast('Exported individual student prediction!', 'success');
+    }
+
+    function buildFormattedReportText() {
+      const ev = AppState.testEvaluation;
+      if (!ev) {
+        return 'No neural network model has been trained yet. Click "Train ANN Model Now" in Step 2 to generate complete evaluation telemetry.';
+      }
+      const m = computeThresholdMetrics(ev.yTrue, ev.yProb, AppState.threshold);
+      return [
+        '======================================================================',
+        'EDUPREDICT - ARTIFICIAL NEURAL NETWORK PERFORMANCE REPORT',
+        `Generated At: ${new Date().toLocaleString()}`,
+        '======================================================================',
+        '',
+        '1. DATASET & PREPROCESSING (ZERO-LEAKAGE PIPELINE)',
+        '----------------------------------------------------------------------',
+        `• Source: ${AppState.sourceType.toUpperCase()} (${AppState.activeDataset.length} total students)`,
+        `• Partition: ${ev.trainCount} Training / ${ev.testCount} Held-Out Testing`,
+        `• Selected Features (${AppState.preprocessor.selectedFeatures.length}): ${AppState.preprocessor.selectedFeatures.join(', ')}`,
+        `• Encoded Input Dimension: ${AppState.preprocessor.inputDimension} units (Z-Score + One-Hot)`,
+        '',
+        '2. TENSORFLOW.JS ANN ARCHITECTURE & HYPERPARAMETERS',
+        '----------------------------------------------------------------------',
+        `• Hidden Layer 1: ${AppState.modelConfig.hidden1} Neurons (ReLU Activation)`,
+        `• Hidden Layer 2: ${AppState.modelConfig.hidden2 ? `${AppState.modelConfig.hidden2} Neurons (ReLU)` : 'Disabled'}`,
+        `• Output Layer:   1 Neuron (Sigmoid Activation)`,
+        `• Optimizer/Loss: Adam (LR=${AppState.modelConfig.learningRate}) / Binary Cross-Entropy`,
+        `• Training Config: ${AppState.modelConfig.epochs} Epochs, Batch Size ${AppState.modelConfig.batchSize}`,
+        '',
+        `3. HELD-OUT TEST EVALUATION METRICS (@ Threshold tau = ${AppState.threshold.toFixed(2)})`,
+        '----------------------------------------------------------------------',
+        `• Training Accuracy:    ${formatPct(ev.finalTrainAcc)}`,
+        `• Validation Accuracy:  ${formatPct(ev.finalValAcc)}`,
+        `• Testing Accuracy:     ${formatPct(m.accuracy)}`,
+        `• Test Precision:       ${m.precision.toFixed(4)}`,
+        `• Test Recall:          ${m.recall.toFixed(4)}`,
+        `• Test F1-Score:        ${m.f1.toFixed(4)}`,
+        `• Test ROC-AUC:         ${ev.auc.toFixed(4)}`,
+        '',
+        '4. CONFUSION MATRIX (HELD-OUT TEST DATASET)',
+        '----------------------------------------------------------------------',
+        `• True Negative (TN): ${m.tn}   | False Positive (FP): ${m.fp}`,
+        `• False Negative (FN): ${m.fn}  | True Positive (TP):  ${m.tp}`,
+        '======================================================================'
+      ].join('\n');
+    }
+
+    // =========================================================================
+    // 13. EVENT WIRING & INITIALIZATION
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      if (typeof tf !== 'undefined') {
+        document.getElementById('tfBackendBadge').textContent = `TF.js v${tf.version.tfjs} ANN`;
+      }
+
+      // Step 1 Mode Toggle: Generate vs Upload
+      const tabGen = document.getElementById('tabGenerate');
+      const tabUp = document.getElementById('tabUpload');
+      const panelGen = document.getElementById('panelGenerate');
+      const panelUp = document.getElementById('panelUpload');
+
+      tabGen.addEventListener('click', () => {
+        tabGen.className = 'px-3 py-1 rounded-md bg-white text-indigo-700 shadow-sm font-semibold';
+        tabUp.className = 'px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium';
+        panelGen.classList.remove('hidden');
+        panelUp.classList.add('hidden');
+      });
+
+      tabUp.addEventListener('click', () => {
+        tabUp.className = 'px-3 py-1 rounded-md bg-white text-indigo-700 shadow-sm font-semibold';
+        tabGen.className = 'px-3 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium';
+        panelUp.classList.remove('hidden');
+        panelGen.classList.add('hidden');
+      });
+
+      // Synthetic Generator Controls
+      const passSlider = document.getElementById('genPassThresholdInput');
+      passSlider.addEventListener('input', (e) => {
+        document.getElementById('lblPassCutoff').textContent = e.target.value;
+      });
+
+      const runGenerate = (newSeed = false) => {
+        const size = parseInt(document.getElementById('genSizeSelect').value, 10) || 1000;
+        const cutoff = parseInt(passSlider.value, 10) || 40;
+        if (newSeed) {
+          document.getElementById('genSeedInput').value = Math.floor(1000 + Math.random() * 9000);
+        }
+        const seed = parseInt(document.getElementById('genSeedInput').value, 10) || 2026;
+
+        AppState.passingCutoff = cutoff;
+        AppState.seed = seed;
+        AppState.sourceType = 'synthetic';
+
+        const syn = generateSyntheticDataset(size, cutoff, seed);
+        AppState.syntheticDataset = syn;
+        AppState.activeDataset = syn;
+        analyzeDatasetSchema(syn, 'Performance');
+        showToast(`Generated ${size.toLocaleString()} synthetic students (Pass cutoff >= ${cutoff}).`, 'info');
+      };
+
+      document.getElementById('generateDatasetBtn').addEventListener('click', () => runGenerate(false));
+      document.getElementById('regenerateRandomSeedBtn').addEventListener('click', () => runGenerate(true));
+
+      // Upload Dropzone & File Input
+      const dropZone = document.getElementById('dropZone');
+      const fileInput = document.getElementById('csvFileInput');
+      dropZone.addEventListener('click', () => fileInput.click());
+      dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-indigo-500'); });
+      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-indigo-500'));
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-indigo-500');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) handleCsvUpload(e.dataTransfer.files[0]);
+      });
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) handleCsvUpload(e.target.files[0]);
+      });
+
+      document.getElementById('targetColumnSelect').addEventListener('change', (e) => updateTargetClassesAndFeatures(e.target.value, true));
+      document.getElementById('positiveClassSelect').addEventListener('change', (e) => { AppState.positiveClass = e.target.value; });
+      document.getElementById('negativeClassSelect').addEventListener('change', (e) => { AppState.negativeClass = e.target.value; });
+
+      document.getElementById('selectRecommendedFeaturesBtn').addEventListener('click', () => {
+        const excl = new Set(['Student_ID', 'Final_Score', AppState.targetColumn]);
+        AppState.selectedFeatures = AppState.columns.filter((c) => !excl.has(c));
+        renderFeatureCheckboxes();
+        updateAxisDropdowns();
+        renderAnnArchitectureDiagram();
+      });
+
+      document.getElementById('applySchemaConfigBtn').addEventListener('click', () => {
+        updateAllDatasetViews();
+        showToast('Schema & charts updated!', 'success');
+      });
+
+      document.getElementById('switchToSyntheticBtn').addEventListener('click', () => {
+        AppState.sourceType = 'synthetic';
+        AppState.activeDataset = AppState.syntheticDataset;
+        analyzeDatasetSchema(AppState.syntheticDataset, 'Performance');
+        showToast('Switched back to Synthetic Cohort.', 'info');
+      });
+
+      // Step 2 Hyperparameter Sliders
+      document.getElementById('cfgHidden1Input').addEventListener('input', (e) => {
+        document.getElementById('lblHidden1').textContent = `${e.target.value} units`;
+        renderAnnArchitectureDiagram();
+      });
+      document.getElementById('cfgEpochsInput').addEventListener('input', (e) => {
+        document.getElementById('lblEpochs').textContent = e.target.value;
+        renderAnnArchitectureDiagram();
+      });
+      ['cfgUseHidden2Select', 'cfgLearningRateSelect'].forEach((id) => {
+        document.getElementById(id).addEventListener('change', renderAnnArchitectureDiagram);
+      });
+
+      // Threshold Slider
+      const threshSlider = document.getElementById('evalThresholdSlider');
+      threshSlider.addEventListener('input', (e) => {
+        AppState.threshold = parseFloat(e.target.value) || 0.50;
+        document.getElementById('evalThresholdValueSpan').textContent = AppState.threshold.toFixed(2);
+        updateEvaluationMetricsAndCharts();
+        renderDecisionBoundaryCanvas();
+        runIndividualStudentPrediction();
+      });
+      document.getElementById('resetThresholdBtn').addEventListener('click', () => {
+        AppState.threshold = 0.50;
+        threshSlider.value = '0.50';
+        document.getElementById('evalThresholdValueSpan').textContent = '0.50';
+        updateEvaluationMetricsAndCharts();
+        renderDecisionBoundaryCanvas();
+        runIndividualStudentPrediction();
+      });
+
+      // Train & Stop
+      document.getElementById('trainModelBtn').addEventListener('click', trainNeuralNetwork);
+      document.getElementById('stopTrainingBtn').addEventListener('click', () => {
+        AppState.stopRequested = true;
+        showToast('Stopping training after current epoch...', 'warning');
+      });
+
+      // 2D Boundary Axes
+      document.getElementById('selAxisX').addEventListener('change', (e) => {
+        AppState.axisXFeature = e.target.value;
+        renderDecisionBoundaryCanvas();
+      });
+      document.getElementById('selAxisY').addEventListener('change', (e) => {
+        AppState.axisYFeature = e.target.value;
+        renderDecisionBoundaryCanvas();
+      });
+
+      // Diagnostic Sub-tabs
+      const diagTabs = [
+        { btn: 'tabDiagLoss', panel: 'diagPanelLoss' },
+        { btn: 'tabDiagConfusion', panel: 'diagPanelConfusion' },
+        { btn: 'tabDiagROC', panel: 'diagPanelROC' },
+        { btn: 'tabDiagPredDist', panel: 'diagPanelPredDist' },
+        { btn: 'tabDiagWeights', panel: 'diagPanelWeights' }
+      ];
+      diagTabs.forEach(({ btn, panel }) => {
+        document.getElementById(btn).addEventListener('click', () => {
+          diagTabs.forEach((t) => {
+            document.getElementById(t.btn).className = 'diag-tab-btn px-2.5 py-1 text-xs font-medium rounded text-slate-600 hover:text-slate-900';
+            document.getElementById(t.panel).classList.add('hidden');
+          });
+          document.getElementById(btn).className = 'diag-tab-btn px-2.5 py-1 text-xs font-semibold rounded bg-white text-indigo-700 shadow-sm border border-slate-200';
+          document.getElementById(panel).classList.remove('hidden');
+        });
+      });
+
+      // Records vs Stats Table Toggle
+      const btnRec = document.getElementById('btnViewRecords');
+      const btnSt = document.getElementById('btnViewStats');
+      btnRec.addEventListener('click', () => {
+        btnRec.className = 'px-2.5 py-1 rounded-md bg-white text-slate-900 font-semibold shadow-sm';
+        btnSt.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium';
+        document.getElementById('recordsTableContainer').classList.remove('hidden');
+        document.getElementById('statsTableContainer').classList.add('hidden');
+      });
+      btnSt.addEventListener('click', () => {
+        btnSt.className = 'px-2.5 py-1 rounded-md bg-white text-slate-900 font-semibold shadow-sm';
+        btnRec.className = 'px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 font-medium';
+        document.getElementById('statsTableContainer').classList.remove('hidden');
+        document.getElementById('recordsTableContainer').classList.add('hidden');
+      });
+
+      // Lower Studio Deck Switcher
+      const deckTabs = [
+        { btn: 'deckBtnEda', panel: 'deckPanelEda' },
+        { btn: 'deckBtnTheory', panel: 'deckPanelTheory' },
+        { btn: 'deckBtnDocs', panel: 'deckPanelDocs' }
+      ];
+      deckTabs.forEach(({ btn, panel }) => {
+        document.getElementById(btn).addEventListener('click', () => {
+          deckTabs.forEach((t) => {
+            document.getElementById(t.btn).className = 'px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-slate-700 border border-slate-200 hover:bg-slate-100';
+            document.getElementById(t.panel).classList.add('hidden');
+          });
+          document.getElementById(btn).className = 'px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white shadow-sm';
+          document.getElementById(panel).classList.remove('hidden');
+        });
+      });
+
+      // Individual Predictor Form & Presets
+      document.getElementById('studentPredictForm').addEventListener('submit', runIndividualStudentPrediction);
+      document.getElementById('fillHighAchieverBtn').addEventListener('click', () => {
+        document.getElementById('predAge').value = 21;
+        document.getElementById('predGender').value = 'Female';
+        document.getElementById('predAttendance').value = 92;
+        document.getElementById('predStudyHours').value = 7.5;
+        document.getElementById('predPrevScore').value = 86;
+        document.getElementById('predAssignScore').value = 90;
+        document.getElementById('predParticipation').value = 85;
+        document.getElementById('predSleepHours').value = 7.5;
+        document.getElementById('predInternet').value = 'Yes';
+        document.getElementById('predExtra').value = 'Yes';
+        runIndividualStudentPrediction();
+      });
+      document.getElementById('fillAtRiskBtn').addEventListener('click', () => {
+        document.getElementById('predAge').value = 19;
+        document.getElementById('predGender').value = 'Male';
+        document.getElementById('predAttendance').value = 46;
+        document.getElementById('predStudyHours').value = 1.0;
+        document.getElementById('predPrevScore').value = 34;
+        document.getElementById('predAssignScore').value = 38;
+        document.getElementById('predParticipation').value = 30;
+        document.getElementById('predSleepHours').value = 4.5;
+        document.getElementById('predInternet').value = 'No';
+        document.getElementById('predExtra').value = 'No';
+        runIndividualStudentPrediction();
+      });
+
+      // Modals & Exports
+      const modalGuide = document.getElementById('modalGuide');
+      const modalExport = document.getElementById('modalExport');
+      document.getElementById('btnQuickGuide').addEventListener('click', () => modalGuide.classList.remove('hidden'));
+      document.getElementById('btnCloseGuide').addEventListener('click', () => modalGuide.classList.add('hidden'));
+      document.getElementById('btnGotItGuide').addEventListener('click', () => modalGuide.classList.add('hidden'));
+
+      document.getElementById('btnExportReport').addEventListener('click', () => {
+        document.getElementById('txtReportContent').value = buildFormattedReportText();
+        document.getElementById('copyConfirmMsg').classList.add('hidden');
+        modalExport.classList.remove('hidden');
+      });
+      document.getElementById('btnCloseExport').addEventListener('click', () => modalExport.classList.add('hidden'));
+
+      document.getElementById('btnCopyReport').addEventListener('click', () => {
+        const txt = document.getElementById('txtReportContent');
+        txt.select();
+        document.execCommand('copy');
+        document.getElementById('copyConfirmMsg').classList.remove('hidden');
+        showToast('Report copied to clipboard!', 'success');
+      });
+
+      document.getElementById('downloadSyntheticCsvBtn').addEventListener('click', () => exportDatasetCsv(AppState.syntheticDataset, 'edupredict_synthetic_students.csv'));
+      document.getElementById('expSyntheticCsvBtn').addEventListener('click', () => exportDatasetCsv(AppState.syntheticDataset, 'edupredict_synthetic_students.csv'));
+      document.getElementById('expActiveCsvBtn').addEventListener('click', () => exportDatasetCsv(AppState.activeDataset, `edupredict_${AppState.sourceType}_dataset.csv`));
+      document.getElementById('expUploadedCsvModalBtn').addEventListener('click', () => exportDatasetCsv(AppState.activeDataset, `edupredict_${AppState.sourceType}_dataset.csv`));
+      document.getElementById('expTestPredsCsvBtn').addEventListener('click', exportTestPredictionsCsv);
+      document.getElementById('expTestPredsModalBtn').addEventListener('click', exportTestPredictionsCsv);
+      document.getElementById('exportSinglePredictionBtn').addEventListener('click', exportSinglePredictionCsv);
+      document.getElementById('expSingleStudentCsvBtn').addEventListener('click', exportSinglePredictionCsv);
+      document.getElementById('expEvalSummaryTxtBtn').addEventListener('click', () => {
+        if (!AppState.testEvaluation) { showToast('Train the ANN first before exporting evaluation summary.', 'warning'); return; }
+        downloadBlob(buildFormattedReportText(), 'edupredict_evaluation_summary.txt', 'text/plain;charset=utf-8;');
+      });
+      document.getElementById('expEvalSummaryJsonBtn').addEventListener('click', () => {
+        if (!AppState.testEvaluation) { showToast('Train the ANN first before exporting telemetry JSON.', 'warning'); return; }
+        downloadBlob(JSON.stringify({ config: AppState.modelConfig, threshold: AppState.threshold, auc: AppState.testEvaluation.auc }, null, 2), 'edupredict_telemetry.json', 'application/json');
+      });
+
+      // Initialize default 1,000-student synthetic cohort on load
+      const initialSyn = generateSyntheticDataset(1000, 40, 2026);
+      AppState.syntheticDataset = initialSyn;
+      AppState.activeDataset = initialSyn;
+      analyzeDatasetSchema(initialSyn, 'Performance');
+      initTrainingCharts();
+    });
+  </script>
+</body>
+</html>
